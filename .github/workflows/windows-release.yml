@@ -83,7 +83,7 @@ jobs:
       - name: Upload installable and portable executables + lockfile
         uses: actions/upload-artifact@v4
         with:
-          name: MashupArena-0.1.0-Windows-x64
+          name: MashupArena-0.2.0-Windows-x64
           path: |
             release/MashupArena-Setup-*.exe
             release/MashupArena-*-portable.exe

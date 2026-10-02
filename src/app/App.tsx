@@ -4,11 +4,13 @@ import type { SaveDocument, Settings } from '../contracts/persistence';
 import type { Locale } from '../contracts/types';
 import { AmbientStage } from '../graphics/AmbientStage';
 import { TripleSparkScreen } from './TripleSparkScreen';
+import { ArcadeGameScreen } from './ArcadeGameScreen';
 import { tFor } from './i18n';
 import { backupSave, importSave, loadDocument, logClientError, persistDocument } from '../persistence/client';
 import { playTone } from './sound';
+import { readyGames } from '../registry/registry';
 import '../styles/main.css';
-type Page = 'home'|'library'|'trainer'|'profile'|'settings';
+type Page = 'home'|'library'|'trainer'|'game'|'profile'|'settings';
 type Category = 'all'|'board'|'card'|'casino'|'favorites';
 const ICONS:Record<string,string>={chess:'♚',xiangqi:'帥',go:'◉',gomoku:'✣',ludo:'♟',property:'◆',
   checkers:'◈',othello:'◑',backgammon:'⚄',snakes:'↝',connect4:'●',tictactoe:'✕',mancala:'◐',dominoes:'▦',
@@ -31,6 +33,7 @@ export default function App(){
   const [doc,setDoc]=useState<SaveDocument|null>(null),ref=useRef<SaveDocument|null>(null);
   const [page,setPage]=useState<Page>('home'),[category,setCategory]=useState<Category>('all'),
     [search,setSearch]=useState(''),[selected,setSelected]=useState<CatalogDesignEntry|null>(null),
+    [activeGame,setActiveGame]=useState<string|null>(null),
     [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[loadError,setLoadError]=useState('');
   const chain=useRef(Promise.resolve()),input=useRef<HTMLInputElement|null>(null),initialized=useRef(false);
   useEffect(()=>{
@@ -96,7 +99,7 @@ export default function App(){
       <section className="hero">
         <AmbientStage onReady={hydrated} reducedMotion={doc.settings.accessibility.reducedMotion}/>
         <div className="hero-aura"/><div className="hero-content">
-          <div className="eyebrow hero-label"><span className="status-light"/> {t('subtitle')} <span className="hero-slash">//</span> VERSION 0.1</div>
+          <div className="eyebrow hero-label"><span className="status-light"/> {t('subtitle')} <span className="hero-slash">//</span> VERSION 0.2</div>
           <h1>{t('heroTitle')}</h1><p>{t('heroBody')}</p>
           <div className="button-row"><button className="button primary large" onClick={()=>{sound();go('trainer');}}>✦ {t('play')}</button>
             <button className="button outline large" onClick={()=>{sound();go('library');}}>{t('explore')} ↗</button></div>
@@ -131,9 +134,10 @@ export default function App(){
       <div className="legal-note">{t('entertainment')}</div>
     </main>}
     {page==='trainer' && <TripleSparkScreen doc={doc} update={update} locale={locale} t={t} onBack={()=>go('home')}/>}
+    {page==='game' && activeGame && <ArcadeGameScreen gameId={activeGame} doc={doc} update={update} locale={locale} onBack={()=>go('library')}/>}
     {page==='profile' && <ProfileView doc={doc} update={update} t={t} avatar={avatar} />}
     {page==='settings' && <SettingsView doc={doc} update={update} replace={replace} t={t} />}
-    <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.1.0</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
+    <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.2.0</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
       <span>{t('entertainment')}</span></footer>
     </div>
     {selected && <div className="modal-backdrop" onClick={()=>setSelected(null)}>
@@ -141,10 +145,10 @@ export default function App(){
         <button className="modal-close" onClick={()=>setSelected(null)} aria-label={t('close')}>×</button>
         <div className={`detail-hero type-${selected.category}`}><span>{ICONS[selected.id]}</span><small>{selected.category.toUpperCase()}</small></div>
         <span className="eyebrow">{t('preview')}</span><h2>{selected.name}</h2>
-        <div className="detail-row"><span>{t('gameDesign')}</span><strong>{t('planned')}</strong></div>
+        <div className="detail-row"><span>{t('gameDesign')}</span><strong>{readyGames.some(game=>game.descriptor.id===selected.id)?t('ready'):t('planned')}</strong></div>
         <div className="detail-row"><span>{t('release')}</span><strong>PHASE {selected.phase}</strong></div>
         <p>{t('ruleNote')}</p><div className="mechanic-tags">{selected.tags.map(x=><span key={x}>#{x}</span>)}</div>
-        <div className="button-row"><button className="button outline" onClick={()=>toggleFavorite(selected.id)}>
+        <div className="button-row">{readyGames.some(game=>game.descriptor.id===selected.id)&&<button className="button primary" onClick={()=>{setActiveGame(selected.id);setSelected(null);setPage('game');}}>{t('play')}</button>}<button className="button outline" onClick={()=>toggleFavorite(selected.id)}>
           {doc.profile.favorites.includes(selected.id)?'♥':'♡'} {t('favorites')}</button>
           <button className="button ghost" onClick={()=>setSelected(null)}>{t('close')}</button></div>
       </section></div>}

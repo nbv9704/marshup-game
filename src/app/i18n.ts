@@ -2,11 +2,11 @@ import type { Locale } from '../contracts/types';
 const vi:Record<string,string> = {
   home:'Sảnh chính',library:'Thư viện',trainer:'Chơi thử',profile:'Hồ sơ',settings:'Cài đặt',
   subtitle:'ARCADE NGOẠI TUYẾN', discover:'KHÁM PHÁ 38 THIẾT KẾ GAME',heroTitle:'MỘT ĐẤU TRƯỜNG. VÔ VÀN KHẢ NĂNG.',
-  heroBody:'Xây dựng đấu trường của riêng bạn. Khám phá bộ sưu tập và chơi Triple Spark — trò luyện tập với bot và chơi tại máy.',
-  play:'CHƠI TRIPLE SPARK',explore:'XEM THƯ VIỆN',phase:'Giai đoạn 2 • Nền tảng và trò luyện tập đang hoạt động',
+  heroBody:'Chơi ngoại tuyến Cờ vua, Color Clash, Blackjack, Slots, Cờ cá ngựa, Cờ tướng và Triple Spark.',
+  play:'CHƠI TRIPLE SPARK',explore:'XEM THƯ VIỆN',phase:'Giai đoạn 3 • Bảy game có thể chơi ngoại tuyến',
   planned:'Trong bản thiết kế',ready:'Có thể chơi',all:'Tất cả',board:'Bàn cờ',card:'Bài lá',casino:'Casino',
   favorites:'Yêu thích',search:'Tìm game, thể loại, cơ chế...',preview:'Thông tin game',
-  ruleNote:'Thẻ này mô tả một game trong lộ trình. Chỉ Triple Spark có thể chơi trong bản dựng hiện tại.',
+  ruleNote:'Game có nhãn Có thể chơi đã được nối với engine luật, tự lưu và chế độ ngoại tuyến. Các game còn lại vẫn là thiết kế trong lộ trình.',
   trainerTitle:'TRIPLE SPARK',trainerBody:'Xếp 3 dấu thành một hàng. Thi đấu với bot hoặc chia đôi máy chơi cùng bạn bè.',
   bot:'Đấu bot',hotseat:'2 người tại máy',newMatch:'Ván mới',resume:'Tiếp tục',tutorial:'Hướng dẫn',
   move:'Lượt',undo:'Hoàn tác',hint:'Gợi ý',turn1:'Lượt của X',turn2:'Lượt của O',won:'X chiến thắng!',lost:'O chiến thắng!',draw:'Hòa!',
@@ -27,16 +27,16 @@ const vi:Record<string,string> = {
   edit:'Chỉnh sửa',saving:'Đang lưu',saved:'Đã lưu ngoại tuyến',error:'Có lỗi khi lưu. Vui lòng thử lại.',
   close:'Đóng',keyboard:'Phím tắt: F11 toàn màn hình · / tìm kiếm · Esc quay lại',
   gameDesign:'Danh mục đang thiết kế', mechanic:'Cơ chế',release:'Dự kiến giai đoạn',
-  setup:'Thiết lập ván',available:'Một game luyện tập đã sẵn sàng',engine:'ENGINE ONLINE • INTERNET OFF'
+  setup:'Thiết lập ván',available:'Bảy game ngoại tuyến đã sẵn sàng',engine:'ENGINE ONLINE • INTERNET OFF'
 };
 const en:Record<string,string> = {
   home:'Lobby',library:'Library',trainer:'Play trainer',profile:'Profile',settings:'Settings',
   subtitle:'OFFLINE ARCADE',discover:'EXPLORE 38 GAME DESIGNS',heroTitle:'ONE ARENA. INFINITE POSSIBILITIES.',
-  heroBody:'Make the arena yours. Explore the library and play Triple Spark — a complete practice match with bot and local hotseat modes.',
-  play:'PLAY TRIPLE SPARK',explore:'EXPLORE LIBRARY',phase:'Phase 2 • Working shell & practice game',
+  heroBody:'Play Chess, Color Clash, Blackjack, Slots, Ludo, Xiangqi and Triple Spark fully offline.',
+  play:'PLAY TRIPLE SPARK',explore:'EXPLORE LIBRARY',phase:'Phase 3 • Seven offline playable games',
   planned:'Design catalog',ready:'Playable',all:'All',board:'Board',card:'Cards',casino:'Casino',
   favorites:'Favorites',search:'Search games, categories, mechanics...',preview:'Game information',
-  ruleNote:'This card describes a game on the roadmap. Only Triple Spark is playable in this build.',
+  ruleNote:'Games marked Playable are connected to validated rules, autosave and offline play. The rest remain roadmap designs.',
   trainerTitle:'TRIPLE SPARK',trainerBody:'Connect three marks in a line. Battle the bot or share your computer with a friend.',
   bot:'Versus bot',hotseat:'Local 2-player',newMatch:'New match',resume:'Resume',tutorial:'How to play',
   move:'Turn',undo:'Undo',hint:'Hint',turn1:"X's turn",turn2:"O's turn",won:'X wins!',lost:'O wins!',draw:'Draw!',
@@ -57,6 +57,6 @@ const en:Record<string,string> = {
   edit:'Edit',saving:'Saving',saved:'Saved offline',error:'Save failed. Please try again.',
   close:'Close',keyboard:'Keyboard: F11 fullscreen · / search · Esc go back',
   gameDesign:'Planned collection',mechanic:'Mechanics',release:'Planned phase',
-  setup:'Match setup',available:'One playable training game',engine:'ENGINE ONLINE • INTERNET OFF'
+  setup:'Match setup',available:'Seven offline games ready',engine:'ENGINE ONLINE • INTERNET OFF'
 };
 export const tFor = (locale:Locale) => (key:string) => (locale === 'vi' ? vi[key] : en[key]) ?? key;

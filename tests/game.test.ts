@@ -4,10 +4,10 @@ import { getReadyGame, readyGames } from '../src/registry/registry';
 import { GAME_CATALOG } from '../src/catalog/gameCatalog';
 import { SeededRng } from '../src/core/seededRng';
 const context={rng:new SeededRng('test'),rulesetVersion:'1.0.0',fusionId:null};
-describe('design catalog + Phase 2 registry',()=>{
-  test('catalog stays a design catalog and ready registry contains only verified plugin',()=>{
+describe('design catalog + verified registry',()=>{
+  test('catalog stays a design catalog and registry contains only verified plugins',()=>{
     expect(GAME_CATALOG).toHaveLength(38);expect(new Set(GAME_CATALOG.map(g=>g.id)).size).toBe(38);
-    expect(readyGames.map(x=>x.descriptor.id)).toEqual(['triple-spark']);
+    expect(readyGames.map(x=>x.descriptor.id)).toEqual(['triple-spark','chess','uno','blackjack','slots','ludo','xiangqi']);
     expect(GAME_CATALOG.every(g=>g.id!=='triple-spark')).toBe(true);
   });
   test('lazy plugin strictly validates untrusted actions',async()=>{
