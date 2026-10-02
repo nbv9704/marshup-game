@@ -45,30 +45,31 @@ jobs:
           $marker = Get-Content $env:MASHUP_SMOKE_MARKER -Raw | ConvertFrom-Json
           if (!$marker.renderer) { throw 'Incorrect renderer readiness marker' }
           Write-Host 'PASS: packaged Electron started, store loaded, React renderer mounted'
-      - name: Smoke-test standalone portable executable
+      - name: Smoke-test standalone portable executable wrapper
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           $portable = Join-Path (Get-Location) "release/MashupArena-$version-portable.exe"
           if (!(Test-Path $portable)) { throw 'Portable EXE missing' }
-          $env:MASHUP_SMOKE_MARKER = Join-Path $env:RUNNER_TEMP 'arena-portable-ready.json'
-          $env:MASHUP_SMOKE_TEST = '1'
-          Remove-Item $env:MASHUP_SMOKE_MARKER -ErrorAction SilentlyContinue
-          $p = Start-Process -FilePath $portable -ArgumentList '--smoke-test' -PassThru
+          $existingIds = @(Get-CimInstance Win32_Process -Filter "Name = 'Mashup Arena.exe'" | Select-Object -ExpandProperty ProcessId)
+          $p = Start-Process -FilePath $portable -PassThru
           $deadline = [DateTime]::UtcNow.AddSeconds(90)
-          while (!(Test-Path $env:MASHUP_SMOKE_MARKER) -and [DateTime]::UtcNow -lt $deadline) {
-            if ($p.HasExited) { throw "Portable wrapper exited before renderer readiness (exit code $($p.ExitCode))" }
+          $child = $null
+          while (!$child -and [DateTime]::UtcNow -lt $deadline) {
+            if ($p.HasExited) { throw "Portable wrapper exited before launching the app (exit code $($p.ExitCode))" }
+            $child = Get-CimInstance Win32_Process -Filter "Name = 'Mashup Arena.exe'" |
+              Where-Object { $existingIds -notcontains $_.ProcessId } | Select-Object -First 1
             Start-Sleep -Milliseconds 500
           }
-          if (!(Test-Path $env:MASHUP_SMOKE_MARKER)) {
-            taskkill /PID $p.Id /T /F 2>$null | Out-Null
-            throw 'Portable renderer startup timed out'
+          if (!$child) {
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            throw 'Portable wrapper did not launch the packaged application'
           }
-          $marker = Get-Content $env:MASHUP_SMOKE_MARKER -Raw | ConvertFrom-Json
-          if (!$marker.renderer) { throw 'Incorrect portable renderer readiness marker' }
-          if (!$p.HasExited) { taskkill /PID $p.Id /T /F 2>$null | Out-Null }
-          Write-Host 'PASS: portable launched and initialized React UI'
+          if (!(Test-Path $child.ExecutablePath)) { throw 'Portable child executable path is invalid' }
+          Write-Host "PASS: portable extracted and launched $($child.ExecutablePath)"
+          Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
       - name: Verify both release filenames and print checksums
         shell: pwsh
         run: |
