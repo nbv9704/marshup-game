@@ -55,8 +55,18 @@ jobs:
           $env:MASHUP_SMOKE_MARKER = Join-Path $env:RUNNER_TEMP 'arena-portable-ready.json'
           Remove-Item $env:MASHUP_SMOKE_MARKER -ErrorAction SilentlyContinue
           $p = Start-Process -FilePath $portable -ArgumentList '--smoke-test' -PassThru
-          if (-not $p.WaitForExit(90000)) { Stop-Process -Id $p.Id -Force; throw 'Portable launch timed out' }
-          if ($p.ExitCode -ne 0 -or !(Test-Path $env:MASHUP_SMOKE_MARKER)) { throw 'Portable renderer startup check failed' }
+          $deadline = [DateTime]::UtcNow.AddSeconds(90)
+          while (!(Test-Path $env:MASHUP_SMOKE_MARKER) -and [DateTime]::UtcNow -lt $deadline) {
+            if ($p.HasExited) { throw "Portable wrapper exited before renderer readiness (exit code $($p.ExitCode))" }
+            Start-Sleep -Milliseconds 500
+          }
+          if (!(Test-Path $env:MASHUP_SMOKE_MARKER)) {
+            taskkill /PID $p.Id /T /F 2>$null | Out-Null
+            throw 'Portable renderer startup timed out'
+          }
+          $marker = Get-Content $env:MASHUP_SMOKE_MARKER -Raw | ConvertFrom-Json
+          if (!$marker.renderer) { throw 'Incorrect portable renderer readiness marker' }
+          if (!$p.HasExited) { taskkill /PID $p.Id /T /F 2>$null | Out-Null }
           Write-Host 'PASS: portable launched and initialized React UI'
       - name: Verify both release filenames and print checksums
         shell: pwsh
