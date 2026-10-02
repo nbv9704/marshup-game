@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "profile": {
+    "id": "local-player", "avatarId": "comet", "displayName": "PLAYER ONE", "level": 1,
+    "xp": 0, "virtualChips": 1000, "favorites": [], "purchasedCosmetics": [], "achievements": []
+  },
+  "settings": {
+    "locale": "vi", "audio": { "music": 0.3, "sfx": 0.65, "muted": false },
+    "accessibility": { "highContrast": false, "fontScale": 1, "reducedMotion": false },
+    "botDifficulty": "normal", "fullscreen": false
+  },
+  "window": { "width": 1280, "height": 800, "maximized": false },
+  "savedMatches": [], "fusionDex": {}, "history": [], "dailyChallenge": {}
+}

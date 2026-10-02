@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target":"ES2022", "module":"CommonJS", "moduleResolution":"Node", "strict":true,
+    "rootDir":"src", "outDir":".core-test-build", "skipLibCheck":true, "lib":["ES2022","DOM"],
+    "noUncheckedIndexedAccess":true
+  },
+  "include": ["src/games/triple-spark/**/*.ts", "src/contracts/**/*.ts", "src/core/seededRng.ts", "src/catalog/gameCatalog.ts", "src/fusion/**/*.ts"]
+}

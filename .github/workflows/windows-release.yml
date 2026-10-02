@@ -1,0 +1,80 @@
+name: Mashup Arena Windows x64 — build, launch, publish artifacts
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    env:
+      ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'false'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies and generate reproducible lockfile
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (Test-Path package-lock.json) { npm ci --no-audit --no-fund }
+          else { npm install --no-audit --no-fund }
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency install failed' }
+      - name: Offline core rule verification
+        run: npm run test:core-offline
+      - name: Unit suite and strict TypeScript checks
+        run: npm test
+      - name: Build application and both Windows .exe targets
+        run: npm run dist
+      - name: Launch packaged application and assert renderer-ready marker
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $exe = Join-Path (Get-Location) 'release/win-unpacked/Mashup Arena.exe'
+          if (!(Test-Path $exe)) { throw "Unpacked application not found: $exe" }
+          $env:MASHUP_SMOKE_MARKER = Join-Path $env:RUNNER_TEMP 'arena-unpacked-ready.json'
+          Remove-Item $env:MASHUP_SMOKE_MARKER -ErrorAction SilentlyContinue
+          $p = Start-Process -FilePath $exe -ArgumentList '--smoke-test' -PassThru
+          if (-not $p.WaitForExit(60000)) { Stop-Process -Id $p.Id -Force; throw 'Unpacked launch timed out' }
+          if ($p.ExitCode -ne 0) { throw "Unpacked app exit code $($p.ExitCode)" }
+          if (!(Test-Path $env:MASHUP_SMOKE_MARKER)) { throw 'React renderer/store readiness marker missing' }
+          $marker = Get-Content $env:MASHUP_SMOKE_MARKER -Raw | ConvertFrom-Json
+          if (!$marker.renderer) { throw 'Incorrect renderer readiness marker' }
+          Write-Host 'PASS: packaged Electron started, store loaded, React renderer mounted'
+      - name: Smoke-test standalone portable executable
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $portable = Join-Path (Get-Location) "release/MashupArena-$version-portable.exe"
+          if (!(Test-Path $portable)) { throw 'Portable EXE missing' }
+          $env:MASHUP_SMOKE_MARKER = Join-Path $env:RUNNER_TEMP 'arena-portable-ready.json'
+          Remove-Item $env:MASHUP_SMOKE_MARKER -ErrorAction SilentlyContinue
+          $p = Start-Process -FilePath $portable -ArgumentList '--smoke-test' -PassThru
+          if (-not $p.WaitForExit(90000)) { Stop-Process -Id $p.Id -Force; throw 'Portable launch timed out' }
+          if ($p.ExitCode -ne 0 -or !(Test-Path $env:MASHUP_SMOKE_MARKER)) { throw 'Portable renderer startup check failed' }
+          Write-Host 'PASS: portable launched and initialized React UI'
+      - name: Verify both release filenames and print checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          @("release/MashupArena-Setup-$v.exe", "release/MashupArena-$v-portable.exe") | ForEach-Object {
+            if (!(Test-Path $_)) { throw "Missing requested artifact: $_" }
+            if ((Get-Item $_).Length -lt 1MB) { throw "Suspicious EXE file size: $_" }
+            Get-FileHash $_ -Algorithm SHA256 | Format-List
+          }
+      - name: Upload installable and portable executables + lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: MashupArena-0.1.0-Windows-x64
+          path: |
+            release/MashupArena-Setup-*.exe
+            release/MashupArena-*-portable.exe
+            package-lock.json
+          if-no-files-found: error
+          retention-days: 30
