@@ -1,13 +1,17 @@
-// Runs entirely with the globally installed TypeScript + built-in Node assertion.
-// Useful for a restricted machine without access to the npm package registry.
+// Uses the project-local TypeScript compiler when dependencies are installed,
+// with the global compiler retained as a fallback for restricted environments.
 import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-execFileSync('tsc',['-p','tsconfig.offline.json'],{cwd:root,stdio:'inherit'});
 const load=createRequire(import.meta.url);
+let localTsc=null;
+try { localTsc=load.resolve('typescript/bin/tsc'); }
+catch { /* The source-only offline environment may provide a global tsc. */ }
+if(localTsc) execFileSync(process.execPath,[localTsc,'-p','tsconfig.offline.json'],{cwd:root,stdio:'inherit'});
+else execFileSync('tsc',['-p','tsconfig.offline.json'],{cwd:root,stdio:'inherit'});
 const {newTripleState,placeMark,legalCells,chooseBotCell,restoreTripleState}=load(path.join(root,'.core-test-build/games/triple-spark/rules.js'));
 const {tripleSpark}=load(path.join(root,'.core-test-build/games/triple-spark/module.js'));
 const {toGameModuleBridge}=load(path.join(root,'.core-test-build/contracts/bridge.js'));

@@ -78,16 +78,22 @@ export function chooseBotCell(cells: readonly Cell[], difficulty: 'easy'|'normal
   const immediate = completes(as) ?? completes(opponent);
   if (immediate !== undefined) return immediate;
   if (difficulty === 'normal') return [4,0,2,6,8,1,3,5,7].find(i => free.includes(i))!;
+  const cache = new Map<string, number>();
   const minimax = (board: readonly Cell[], turn: Mark, depth: number): number => {
     const w = winningCells(board);
     if (w) return w.mark === as ? 10-depth : depth-10;
     if (board.every(c => c !== null)) return 0;
+    const key = `${turn}:${board.map(cell => cell === 'p1' ? '1' : cell === 'p2' ? '2' : '0').join('')}`;
+    const cached = cache.get(key);
+    if (cached !== undefined) return cached;
     const scores = board.flatMap((m, i) => {
       if (m !== null) return [];
       const copy = board.slice(); copy[i] = turn;
       return [minimax(copy, turn === 'p1' ? 'p2' : 'p1', depth+1)];
     });
-    return turn === as ? Math.max(...scores) : Math.min(...scores);
+    const score = turn === as ? Math.max(...scores) : Math.min(...scores);
+    cache.set(key, score);
+    return score;
   };
   const priorities = [4,0,2,6,8,1,3,5,7].filter(i => free.includes(i));
   const ranked = priorities.map(i => {
