@@ -5,7 +5,9 @@ import * as fs from 'node:fs/promises';
 import { commitSave, flushWrites, loadSave, loadWindow, logError, saveWindow } from './store';
 
 const APP_ID = 'games.mashuparena.desktop';
-const isSmoke = process.argv.includes('--smoke-test');
+// Portable NSIS wrappers do not reliably forward command-line arguments to the
+// extracted Electron child, so CI may opt in through an inherited environment flag.
+const isSmoke = process.argv.includes('--smoke-test') || process.env['MASHUP_SMOKE_TEST'] === '1';
 const devServer = process.env['VITE_DEV_SERVER_URL'];
 const single = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;

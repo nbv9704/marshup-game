@@ -53,6 +53,7 @@ jobs:
           $portable = Join-Path (Get-Location) "release/MashupArena-$version-portable.exe"
           if (!(Test-Path $portable)) { throw 'Portable EXE missing' }
           $env:MASHUP_SMOKE_MARKER = Join-Path $env:RUNNER_TEMP 'arena-portable-ready.json'
+          $env:MASHUP_SMOKE_TEST = '1'
           Remove-Item $env:MASHUP_SMOKE_MARKER -ErrorAction SilentlyContinue
           $p = Start-Process -FilePath $portable -ArgumentList '--smoke-test' -PassThru
           $deadline = [DateTime]::UtcNow.AddSeconds(90)
