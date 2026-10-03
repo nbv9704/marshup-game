@@ -31,8 +31,8 @@ function trusted(event: Electron.IpcMainInvokeEvent): boolean {
 }
 function safeBounds(previous: Record<string,unknown>): Electron.Rectangle {
   const primary = screen.getPrimaryDisplay().workArea;
-  const width = Math.max(900,Math.min(2200,Number(previous['width']) || 1280));
-  const height = Math.max(620,Math.min(1500,Number(previous['height']) || 800));
+  const width = Math.max(1024,Math.min(2200,Number(previous['width']) || 1280));
+  const height = Math.max(600,Math.min(1500,Number(previous['height']) || 800));
   const x = Number(previous['x']), y = Number(previous['y']);
   const match = screen.getAllDisplays().find(d => Number.isFinite(x) && Number.isFinite(y) &&
     x + 90 >= d.workArea.x && x + 90 <= d.workArea.x + d.workArea.width &&
@@ -113,7 +113,7 @@ async function createWindows() {
     splash.show();
   }
   mainWindow = new BrowserWindow({ ...bounds, title:'Mashup Arena · Offline Arcade',show:false,
-    minWidth:900,minHeight:620, backgroundColor:'#0b1122',autoHideMenuBar:true,
+    minWidth:1024,minHeight:600, backgroundColor:'#a52342',autoHideMenuBar:true,
     icon:path.join(app.getAppPath(),'build','icon.png'),
     webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true,
       webSecurity:true,devTools: Boolean(devServer)} });

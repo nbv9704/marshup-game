@@ -18,26 +18,30 @@ export function PixiBoard(props:Props) {
     for(let i=0;i<9;i++) {
       const x=ox+(i%3)*(cellSize+gap),y=oy+Math.floor(i/3)*(cellSize+gap);
       const won=Boolean(winningLine?.includes(i));
+      app.stage.addChild(new Graphics().roundRect(x+4,y+7,cellSize,cellSize,Math.max(9,cellSize*0.11))
+        .fill({color:0x742b52,alpha:.56}));
       const frame=new Graphics().roundRect(x,y,cellSize,cellSize,Math.max(9,cellSize*0.11))
-        .fill({color:won?0x204e4b:(highContrast?0x15243e:0x19283c),alpha:1})
-        .stroke({color:won?0x49e3cb:hint===i?0xffd07b:0x394d66,width:won?4:hint===i?3:1.5,alpha:1});
+        .fill({color:won?0xffd365:(highContrast?0xffffff:0xffe7ba),alpha:1})
+        .stroke({color:won?0xffffff:hint===i?0xffca41:0xfff9e7,width:won?6:hint===i?6:4,alpha:1});
       frame.eventMode=enabled && cells[i]===null?'static':'none';
       frame.cursor=enabled && cells[i]===null?'pointer':'default';
       frame.on('pointertap',()=>onCell(i));app.stage.addChild(frame);
+      app.stage.addChild(new Graphics().roundRect(x+cellSize*.12,y+cellSize*.08,cellSize*.76,cellSize*.09,cellSize*.05)
+        .fill({color:0xffffff,alpha:.36}));
       const m=cells[i];if (m) {
         const margin=cellSize*.27;
         const mark=new Graphics();
         if(m==='p1') {
           mark.moveTo(x+margin,y+margin).lineTo(x+cellSize-margin,y+cellSize-margin)
             .moveTo(x+cellSize-margin,y+margin).lineTo(x+margin,y+cellSize-margin)
-            .stroke({width:Math.max(6,cellSize*.065),color:highContrast?0x00ffe0:0x49e3cb,cap:'round'});
+            .stroke({width:Math.max(7,cellSize*.078),color:highContrast?0xc90035:0xe63658,cap:'round'});
         } else {
           mark.circle(x+cellSize/2,y+cellSize/2,(cellSize-2*margin)/2)
-            .stroke({width:Math.max(6,cellSize*.065),color:highContrast?0xffe67a:0xbf8cff});
+            .stroke({width:Math.max(7,cellSize*.078),color:highContrast?0x00689b:0x289bd3});
         }
         app.stage.addChild(mark);
       }
-      if(hint===i && !m) app.stage.addChild(new Graphics().circle(x+cellSize/2,y+cellSize/2,6).fill(0xffd07b));
+      if(hint===i && !m) app.stage.addChild(new Graphics().circle(x+cellSize/2,y+cellSize/2,8).fill(0xd84c7d));
     }
   };
   useEffect(()=>{

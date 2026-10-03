@@ -6,7 +6,7 @@
   },
   "settings": {
     "locale": "vi", "audio": { "music": 0.3, "sfx": 0.65, "muted": false },
-    "accessibility": { "highContrast": false, "fontScale": 1, "reducedMotion": false },
+    "accessibility": { "highContrast": false, "fontScale": 1, "reducedMotion": false, "colorblindSymbols": false },
     "botDifficulty": "normal", "fullscreen": false
   },
   "window": { "width": 1280, "height": 800, "maximized": false },

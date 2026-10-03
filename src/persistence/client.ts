@@ -15,6 +15,7 @@ export function isDocument(doc: unknown): doc is SaveDocument {
     ['vi','en'].includes(s.locale) && ['easy','normal','hard'].includes(s.botDifficulty) &&
     typeof s.audio.muted==='boolean' && [s.audio.music,s.audio.sfx].every(n=>typeof n==='number' && n>=0 && n<=1) &&
     typeof s.accessibility.highContrast==='boolean' && typeof s.accessibility.reducedMotion==='boolean' &&
+    (s.accessibility.colorblindSymbols===undefined || typeof s.accessibility.colorblindSymbols==='boolean') &&
     [1,1.15,1.3].includes(s.accessibility.fontScale) && typeof s.fullscreen==='boolean' &&
     Array.isArray(d.savedMatches) && d.savedMatches.length<=4 && Array.isArray(d.history) && d.history.length<=200 &&
     d.fusionDex!==null && typeof d.fusionDex==='object' && d.dailyChallenge!==null && typeof d.dailyChallenge==='object';

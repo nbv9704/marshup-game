@@ -21,6 +21,9 @@
     "test:core-offline": "node scripts/test-core-offline.mjs"
   },
   "devDependencies": {
+    "@fontsource/fredoka": "^5.2.7",
+    "@fontsource/inter": "5.2.5",
+    "@fontsource/space-grotesk": "5.2.5",
     "@types/node": "22.15.30",
     "@types/react": "19.1.7",
     "@types/react-dom": "19.1.6",
@@ -29,15 +32,13 @@
     "cross-env": "7.0.3",
     "electron": "36.4.0",
     "electron-builder": "26.0.12",
+    "pixi.js": "8.11.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "typescript": "5.8.3",
     "vite": "6.3.5",
     "vitest": "3.2.4",
-    "wait-on": "8.0.3",
-    "@fontsource/inter": "5.2.5",
-    "@fontsource/space-grotesk": "5.2.5",
-    "pixi.js": "8.11.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "wait-on": "8.0.3"
   },
   "build": {
     "appId": "games.mashuparena.desktop",
@@ -83,6 +84,5 @@
     "portable": {
       "artifactName": "MashupArena-${version}-portable.${ext}"
     }
-  },
-  "dependencies": {}
+  }
 }

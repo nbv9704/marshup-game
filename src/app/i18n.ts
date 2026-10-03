@@ -1,9 +1,9 @@
 import type { Locale } from '../contracts/types';
 const vi:Record<string,string> = {
-  home:'Sảnh chính',library:'Thư viện',trainer:'Chơi thử',profile:'Hồ sơ',settings:'Cài đặt',
+  home:'Sảnh chính',library:'Thư viện',trainer:'Chơi thử',profile:'Hồ sơ',settings:'Cài đặt',styleGuide:'Style Guide',
   subtitle:'ARCADE NGOẠI TUYẾN', discover:'KHÁM PHÁ 38 THIẾT KẾ GAME',heroTitle:'MỘT ĐẤU TRƯỜNG. VÔ VÀN KHẢ NĂNG.',
   heroBody:'Chơi ngoại tuyến Cờ vua, Color Clash, Blackjack, Slots, Cờ cá ngựa, Cờ tướng và Triple Spark.',
-  play:'CHƠI TRIPLE SPARK',explore:'XEM THƯ VIỆN',phase:'Giai đoạn 3 • Bảy game có thể chơi ngoại tuyến',
+  play:'CHƠI TRIPLE SPARK',playNow:'CHƠI NGAY',explore:'XEM THƯ VIỆN',phase:'Giai đoạn 3 • Bảy game có thể chơi ngoại tuyến',
   planned:'Trong bản thiết kế',ready:'Có thể chơi',all:'Tất cả',board:'Bàn cờ',card:'Bài lá',casino:'Casino',
   favorites:'Yêu thích',search:'Tìm game, thể loại, cơ chế...',preview:'Thông tin game',
   ruleNote:'Game có nhãn Có thể chơi đã được nối với engine luật, tự lưu và chế độ ngoại tuyến. Các game còn lại vẫn là thiết kế trong lộ trình.',
@@ -15,8 +15,8 @@ const vi:Record<string,string> = {
   saveInfo:'Tự lưu sau mỗi nước đi • Tiếp tục sau khi khởi động lại',
   profileTitle:'THẺ NGƯỜI CHƠI',name:'Tên hiển thị',avatar:'Chọn biểu tượng',level:'Cấp độ',chips:'Xu giải trí',
   completed:'Ván đã hoàn thành',wins:'Thắng bot',faves:'Game yêu thích',saveName:'Lưu hồ sơ',
-  settingsTitle:'CÁ NHÂN HÓA ĐẤU TRƯỜNG',language:'Ngôn ngữ',audio:'Âm thanh',mute:'Tắt toàn bộ âm',sfx:'Âm lượng hiệu ứng',
-  contrast:'Tương phản cao',motion:'Giảm hiệu ứng chuyển động',font:'Cỡ chữ',fullscreen:'Toàn màn hình',
+  settingsTitle:'CÁ NHÂN HÓA ĐẤU TRƯỜNG',language:'Ngôn ngữ',audio:'Âm thanh',mute:'Tắt toàn bộ âm',sfx:'Âm lượng hiệu ứng',music:'Âm lượng nhạc',
+  contrast:'Tương phản cao',motion:'Giảm hiệu ứng chuyển động',colorblind:'Ký hiệu phân biệt màu',font:'Cỡ chữ',fullscreen:'Toàn màn hình',
   export:'Xuất bản sao hồ sơ',import:'Khôi phục từ bản sao',offline:'OFFLINE',
   phaseInfo:'Trò gốc và Fusion sẽ được bổ sung theo từng giai đoạn. Không có game chưa hoàn thiện nào được mở chơi.',
   noResults:'Không tìm thấy game phù hợp.',openTrainer:'Trở lại trận luyện tập',
@@ -30,10 +30,10 @@ const vi:Record<string,string> = {
   setup:'Thiết lập ván',available:'Bảy game ngoại tuyến đã sẵn sàng',engine:'ENGINE ONLINE • INTERNET OFF'
 };
 const en:Record<string,string> = {
-  home:'Lobby',library:'Library',trainer:'Play trainer',profile:'Profile',settings:'Settings',
+  home:'Lobby',library:'Library',trainer:'Play trainer',profile:'Profile',settings:'Settings',styleGuide:'Style Guide',
   subtitle:'OFFLINE ARCADE',discover:'EXPLORE 38 GAME DESIGNS',heroTitle:'ONE ARENA. INFINITE POSSIBILITIES.',
   heroBody:'Play Chess, Color Clash, Blackjack, Slots, Ludo, Xiangqi and Triple Spark fully offline.',
-  play:'PLAY TRIPLE SPARK',explore:'EXPLORE LIBRARY',phase:'Phase 3 • Seven offline playable games',
+  play:'PLAY TRIPLE SPARK',playNow:'PLAY NOW',explore:'EXPLORE LIBRARY',phase:'Phase 3 • Seven offline playable games',
   planned:'Design catalog',ready:'Playable',all:'All',board:'Board',card:'Cards',casino:'Casino',
   favorites:'Favorites',search:'Search games, categories, mechanics...',preview:'Game information',
   ruleNote:'Games marked Playable are connected to validated rules, autosave and offline play. The rest remain roadmap designs.',
@@ -45,8 +45,8 @@ const en:Record<string,string> = {
   saveInfo:'Auto-saves every move • Resume after relaunch',
   profileTitle:'PLAYER CARD',name:'Display name',avatar:'Choose avatar',level:'Level',chips:'Play chips',
   completed:'Matches completed',wins:'Bot wins',faves:'Favorite games',saveName:'Save profile',
-  settingsTitle:'MAKE THE ARENA YOURS',language:'Language',audio:'Audio',mute:'Mute all sounds',sfx:'Effects volume',
-  contrast:'High contrast',motion:'Reduced motion',font:'Font size',fullscreen:'Fullscreen',
+  settingsTitle:'MAKE THE ARENA YOURS',language:'Language',audio:'Audio',mute:'Mute all sounds',sfx:'Effects volume',music:'Music volume',
+  contrast:'High contrast',motion:'Reduced motion',colorblind:'Color symbols',font:'Font size',fullscreen:'Fullscreen',
   export:'Export profile backup',import:'Restore a backup',offline:'OFFLINE',
   phaseInfo:'Original games and fusions are added in later phases. Incomplete games cannot be launched.',
   noResults:'No matching games found.',openTrainer:'Resume trainer',

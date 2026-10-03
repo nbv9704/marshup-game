@@ -25,6 +25,7 @@ export function validDocument(d: unknown): d is JsonRecord {
     ['vi','en'].includes(String(s['locale'])) && ['easy','normal','hard'].includes(String(s['botDifficulty'])) &&
     typeof a['muted']==='boolean' && [a['music'],a['sfx']].every(n=>typeof n==='number'&&n>=0&&n<=1) &&
     typeof access['highContrast']==='boolean' && typeof access['reducedMotion']==='boolean' &&
+    (access['colorblindSymbols']===undefined || typeof access['colorblindSymbols']==='boolean') &&
     [1,1.15,1.3].includes(Number(access['fontScale'])) && typeof s['fullscreen']==='boolean' &&
     Array.isArray(d['savedMatches']) && d['savedMatches'].length<=4 && Array.isArray(d['history']) && d['history'].length<=200 &&
     object(d['fusionDex']) && object(d['dailyChallenge']);

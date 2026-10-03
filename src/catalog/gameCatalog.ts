@@ -23,7 +23,7 @@ export const GAME_CATALOG: readonly CatalogDesignEntry[] = [
   { id:'tictactoe',name:'Extended Tic-Tac-Toe',category:'board',kind:'competitive',tags:['place'],phase:5 },
   { id:'mancala',name:'Mancala',category:'board',kind:'competitive',tags:['collect','place'],phase:5 },
   { id:'dominoes',name:'Dominoes',category:'board',kind:'round-scored',tags:['place','draw','collect'],phase:5 },
-  { id:'uno',name:'Color Clash (UNO ruleset)',category:'card',kind:'competitive',tags:['draw','reverse','skip','swap'],phase:3 },
+  { id:'uno',name:'Color Clash',category:'card',kind:'competitive',tags:['draw','reverse','skip','swap'],phase:3 },
   { id:'tienlen',name:'Tiến Lên Miền Nam',category:'card',kind:'competitive',tags:['discard','challenge'],phase:5 },
   { id:'phom',name:'Phỏm',category:'card',kind:'round-scored',tags:['draw','discard','collect'],phase:5 },
   { id:'maubinh',name:'Mậu Binh',category:'card',kind:'round-scored',tags:['swap','collect'],phase:5 },

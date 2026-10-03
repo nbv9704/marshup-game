@@ -1,0 +1,43 @@
+:root {
+  --party-red: #e8262b;
+  --party-crimson: #83172b;
+  --party-yellow: #ffcf3a;
+  --party-green: #4fd967;
+  --party-blue: #38b9f7;
+  --party-purple: #a75aff;
+  --party-orange: #ff873b;
+  --party-cyan: #44d5ed;
+  --party-white: #fffaf1;
+  --party-ink: #26212c;
+  --party-outline: #392437;
+  --party-shadow: 0 11px 0 #53172c, 0 22px 38px #370b235e;
+  --party-panel-shadow: 0 9px 0 #682039, 0 24px 50px #3b061e69;
+  --party-inset: inset 0 3px 0 #ffffff94, inset 0 -5px 0 #65122b65;
+  --party-radius-sm: 14px;
+  --party-radius-md: 23px;
+  --party-radius-lg: 34px;
+  --party-radius-pill: 999px;
+  --party-space-1: 4px;
+  --party-space-2: 8px;
+  --party-space-3: 12px;
+  --party-space-4: 16px;
+  --party-space-5: 24px;
+  --party-space-6: 32px;
+  --party-space-7: 48px;
+  --party-font-small: clamp(12px, .78vw, 14px);
+  --party-font-body: clamp(15px, 1vw, 18px);
+  --party-font-title: clamp(35px, 4vw, 68px);
+  --party-layer-table: 0;
+  --party-layer-seats: 2;
+  --party-layer-hud: 5;
+  --party-layer-modal: 30;
+  --party-fast: 140ms;
+  --party-normal: 260ms;
+  --party-slow: 540ms;
+  --party-ease: cubic-bezier(.2,.9,.18,1.18);
+}
+
+.theme-card { --theme-start: #ff8b3d; --theme-mid: #ed3a33; --theme-end: #95152b; --theme-rim: #ffde7d; --theme-felt: #bb2938; }
+.theme-board { --theme-start: #40d4d6; --theme-mid: #137d9b; --theme-end: #093e65; --theme-rim: #ffc66b; --theme-felt: #147783; }
+.theme-casino { --theme-start: #e964df; --theme-mid: #853ebf; --theme-end: #3d216f; --theme-rim: #ffdc71; --theme-felt: #583390; }
+.theme-fusion { --theme-start: #f96a8e; --theme-mid: #7f50dd; --theme-end: #135fb2; --theme-rim: #fff388; --theme-felt: #7444ac; }

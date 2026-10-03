@@ -6,6 +6,7 @@ import { getReadyGame } from '../registry/registry';
 import { chooseBotCell, restoreTripleState, type TripleState } from '../games/triple-spark/rules';
 import { SeededRng } from '../core/seededRng';
 import { PixiBoard } from '../graphics/PixiBoard';
+import { TableScene } from './TableScene';
 import { playTone } from './sound';
 interface Session { id:string; state:TripleState; past:TripleState[]; mode:'bot'|'hotseat'; awarded:boolean; }
 interface Props {
@@ -139,17 +140,21 @@ export function TripleSparkScreen({doc,update,t,locale,onBack}:Props) {
     <div className="section-heading"><div><span className="eyebrow">REAL GAME ENGINE / #01</span><h1>{t('trainerTitle')}</h1>
       <p>{t('trainerBody')}</p></div><button className="button ghost" onClick={onBack}>← {t('home')}</button></div>
     <div className="arena-layout">
-      <section className="arena-main panel">
+      <section className="arena-main">
         <div className="arena-status"><div><span className="live-dot"/> {session?.state.phase==='completed'?
           (session.state.winner==='draw'?t('draw'):session.state.winner==='p1'?t('won'):t('lost')):
           !session?t('setup'):session.state.activePlayer==='p1'?t('turn1'):t('turn2')}</div>
           <span>{session?t('move')+ ' '+session.state.turnNumber:'READY'}</span></div>
-        {session ? <PixiBoard cells={session.state.cells} winningLine={session.state.winningLine}
-          hint={hint} enabled={canPlay} onCell={i=>{const s=live.current;if(s?.state.activePlayer)playCell(i,s.state.activePlayer);}}
-          reducedMotion={doc.settings.accessibility.reducedMotion} highContrast={doc.settings.accessibility.highContrast}/> :
-          <div className="setup-center"><div className="big-orb">✦</div><h2>{t('setup')}</h2>
-            <p>{t('helpText')}</p><div className="button-row"><button className="button primary" disabled={!bridge} onClick={()=>newMatch('bot')}>{t('bot')}</button>
-            <button className="button outline" disabled={!bridge} onClick={()=>newMatch('hotseat')}>{t('hotseat')}</button></div></div>}
+        <TableScene gameId="triple-spark" category="board" title="Triple Spark" state={{}} actions={[]}
+          active={session?.state.activePlayer??null} mode={session?.mode??'bot'} locale={locale}
+          playerName={doc.profile.displayName} onAction={()=>{}}>
+          {session ? <PixiBoard cells={session.state.cells} winningLine={session.state.winningLine}
+            hint={hint} enabled={canPlay} onCell={i=>{const s=live.current;if(s?.state.activePlayer)playCell(i,s.state.activePlayer);}}
+            reducedMotion={doc.settings.accessibility.reducedMotion} highContrast={doc.settings.accessibility.highContrast}/> :
+            <div className="setup-center"><div className="big-orb">✦</div><h2>{t('setup')}</h2>
+              <p>{t('helpText')}</p><div className="button-row"><button className="button primary" disabled={!bridge} onClick={()=>newMatch('bot')}>{t('bot')}</button>
+              <button className="button outline" disabled={!bridge} onClick={()=>newMatch('hotseat')}>{t('hotseat')}</button></div></div>}
+        </TableScene>
         {session && <div className="arena-toolbar"><button className="button outline" onClick={()=>newMatch(session.mode)}>{t('newMatch')}</button>
           <button className="button ghost" disabled={!session.past.length || Boolean(session.state.phase==='completed' && session.awarded)} onClick={undo}>↶ {t('undo')}</button>
           <button className="button ghost" disabled={!canPlay} onClick={suggest}>✧ {t('hint')}</button>

@@ -13,7 +13,7 @@ export interface Profile {
 export interface Settings {
   readonly locale: Locale;
   readonly audio: { readonly music: number; readonly sfx: number; readonly muted: boolean };
-  readonly accessibility: { readonly highContrast: boolean; readonly fontScale: 1 | 1.15 | 1.3; readonly reducedMotion: boolean };
+  readonly accessibility: { readonly highContrast: boolean; readonly fontScale: 1 | 1.15 | 1.3; readonly reducedMotion: boolean; readonly colorblindSymbols?: boolean };
   readonly botDifficulty: BotDifficulty;
   readonly fullscreen: boolean;
 }
