@@ -200,7 +200,7 @@ export function Chess3DScreen({ doc, update, onLibrary, onHome }: Props) {
   const result = view?.state.phase === 'completed' ? view.state.winner === 'draw' ? 'HÒA'
     : view.state.winner === (mode === 'guest' ? 'p2' : 'p1') ? 'CHIẾN THẮNG' : 'THẤT BẠI' : null;
 
-  return <main className="page chess3d-room">
+  return <main className={`page chess3d-room${mode !== 'setup' && view ? ' is-playing' : ''}`}>
     <div className="section-heading"><div><span className="eyebrow">BOARD HALL / CHESS 3D</span><h1>CỜ VUA 3D</h1>
       <p>Chơi một mình với bot hoặc mở phòng LAN. Luật cờ do cùng một bộ kiểm tra xác nhận.</p></div>
       <button className="button ghost" onClick={() => void navigate('library')}>← CHỌN GAME</button></div>

@@ -80,13 +80,30 @@ async function runChessVisualSmoke(page: Electron.WebContents): Promise<void> {
       await waitFor(selector);
       await page.executeJavaScript(`document.querySelector(${JSON.stringify(selector)}).click()`);
     };
+    const assertGameScrollLayout = async () => {
+      const layout = await page.executeJavaScript(`(() => {
+        const gamePage = document.querySelector('.page');
+        return { outer: getComputedStyle(document.documentElement).overflowY,
+          page: gamePage ? getComputedStyle(gamePage).overflowY : '',
+          bar: gamePage ? getComputedStyle(gamePage).scrollbarWidth : '' };
+      })()`);
+      if (layout.outer !== 'hidden' || layout.page !== 'auto' || layout.bar !== 'none')
+        throw new Error(`Native page scrollbar visible: ${JSON.stringify(layout)}`);
+    };
+    await waitFor('.page');
+    await assertGameScrollLayout();
     await click('.hero .button.outline.large');
     await click('.game-grid .game-tile button[aria-label^="Chess:"]');
     await click('.game-detail .button.primary');
     await click('.chess3d-setup .panel:first-child .button.primary');
     await waitFor('.chess3d-canvas canvas');
+    await assertGameScrollLayout();
     await click('.chess3d-hud .button.primary');
-    await page.executeJavaScript("document.querySelector('.chess3d-shell').scrollIntoView({block:'center'})");
+    const playRoomFits = await page.executeJavaScript(`(() => {
+      const page = document.querySelector('.chess3d-room');
+      return page && page.scrollHeight <= page.clientHeight + 2;
+    })()`);
+    if (!playRoomFits) throw new Error('Chess 3D play room still requires scrolling at normal desktop size');
     await new Promise(resolve => setTimeout(resolve, 1_000));
     await fs.writeFile(marker, (await page.capturePage()).toPNG());
   } catch (err) { await logError(err); process.exitCode=1; }

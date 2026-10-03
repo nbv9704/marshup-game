@@ -1,7 +1,7 @@
 {
   "name": "mashup-arena",
   "private": true,
-  "version": "0.3.0-beta.2",
+  "version": "0.3.0-beta.3",
   "description": "Offline Windows desktop arcade shell and deterministic practice game",
   "author": "Mashup Arena",
   "license": "UNLICENSED",
@@ -17,9 +17,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p electron/tsconfig.json",
     "build:electron": "node scripts/build-electron.mjs",
     "build": "npm run typecheck && vite build && node scripts/check-release-bundle.mjs && npm run build:electron",
-    "dist": "npm test && npm run build && node scripts/package-windows.mjs && npm run test:installer-version",
+    "dist": "npm test && npm run build && node scripts/package-windows.mjs && npm run test:installer-version && npm run test:windows-brand",
     "test:core-offline": "node scripts/test-core-offline.mjs",
-    "test:installer-version": "node scripts/test-installer-version.mjs"
+    "test:installer-version": "node scripts/test-installer-version.mjs",
+    "test:windows-brand": "powershell.exe -NoProfile -File scripts/test-windows-brand.ps1"
   },
   "devDependencies": {
     "@fontsource/fredoka": "^5.2.7",
@@ -36,6 +37,7 @@
     "electron-builder": "26.0.12",
     "esbuild": "0.25.12",
     "pixi.js": "8.11.0",
+    "rcedit": "^5.0.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "three": "^0.186.1",
@@ -48,6 +50,7 @@
     "appId": "games.mashuparena.desktop",
     "productName": "Mashup Arena",
     "asar": true,
+    "afterPack": "scripts/brand-windows-exe.mjs",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -63,6 +66,7 @@
     ],
     "win": {
       "icon": "build/icon.ico",
+      "signAndEditExecutable": false,
       "target": [
         {
           "target": "nsis",

@@ -9,7 +9,7 @@ if (process.platform !== 'win32') throw new Error('Installer-version probe requi
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const load = createRequire(import.meta.url);
 const packageJson = load(path.join(root, 'package.json'));
-assert.equal(packageJson.version, '0.3.0-beta.2', 'Update NSIS probe fixtures when the installer version changes');
+assert.equal(packageJson.version, '0.3.0-beta.3', 'Update NSIS probe fixtures when the installer version changes');
 const { UUID } = load('builder-util-runtime');
 const historicalGuid = UUID.v5(packageJson.build.appId, UUID.parse('50e065bc-3134-11e6-9bab-38c9862bdaf3'));
 assert.equal(packageJson.build.nsis.guid, historicalGuid, 'NSIS GUID must continue to match 0.1/0.2 installs');
@@ -23,13 +23,21 @@ function checkProbe(name, compileArgs) {
   assert.equal(compile.status, 0, `NSIS ${name} compile failed:\n${compile.stdout}\n${compile.stderr}`);
   const marker = path.join(root, 'release', `${name}.txt`);
   if (existsSync(marker)) unlinkSync(marker);
-  const probe = spawnSync('powershell.exe', ['-NoProfile', '-Command',
-    '$p = Start-Process -FilePath $env:MASHUP_NSIS_PROBE -ArgumentList "/S" -PassThru -WindowStyle Hidden; ' +
-    'if (-not $p.WaitForExit(15000)) { throw "NSIS probe timed out" }; exit $p.ExitCode'],
-  { cwd: root, encoding: 'utf8', timeout: 20_000, windowsHide: true,
-    env: { ...process.env, MASHUP_NSIS_PROBE: path.join(root, 'release', `${name}.exe`) } });
-  if (probe.error) throw probe.error;
-  assert.equal(probe.status, 0, `NSIS ${name} failed: ${probe.stderr}`);
+  const sleep = new Int32Array(new SharedArrayBuffer(4));
+  let passed = false;
+  for (let attempt = 0; attempt < 2 && !passed; attempt++) {
+    const probe = spawnSync('powershell.exe', ['-NoProfile', '-Command',
+      '$p = Start-Process -FilePath $env:MASHUP_NSIS_PROBE -ArgumentList "/S" -PassThru -WindowStyle Hidden; ' +
+      'if (-not $p.WaitForExit(15000)) { throw "NSIS probe timed out" }; exit $p.ExitCode'],
+    { cwd: root, stdio: 'ignore', timeout: 25_000, windowsHide: true,
+      env: { ...process.env, MASHUP_NSIS_PROBE: path.join(root, 'release', `${name}.exe`) } });
+    if (probe.error && probe.error.code !== 'ETIMEDOUT') throw probe.error;
+    // A new unsigned NSIS probe can be delayed by Windows scanning even after
+    // its launcher exits; wait for the output and retry the harmless probe once.
+    for (let i = 0; i < 50 && !existsSync(marker); i++) Atomics.wait(sleep, 0, 0, 100);
+    passed = probe.status === 0 && existsSync(marker);
+  }
+  assert(passed, `NSIS ${name} probe did not finish or write its result`);
   return readFileSync(marker, 'utf8').replace(/\r\n/g, '\n').trim();
 }
 

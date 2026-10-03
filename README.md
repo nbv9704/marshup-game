@@ -27,20 +27,19 @@ npm run build
 npm run dist
 ```
 
-`npm test` runs rule/integration tests and strict TypeScript checks. `npm run dist` also creates the Windows installer and portable executable.
-On Windows without symlink permission, the packaging script automatically skips executable icon/metadata editing; game content and both `.exe` outputs are unchanged. A branded executable requires Windows Developer Mode or a symlink-capable CI runner. Neither option signs the app; code signing needs a separate certificate.
+`npm test` runs rule/integration tests and strict TypeScript checks. `npm run dist` also creates the Windows installer and portable executable. The Windows app executable is branded during packaging without requiring Developer Mode or symlink permission. The binaries remain unsigned; code signing needs a separate certificate.
 
 ## Windows executables
 
 Expected beta outputs after `npm run dist`:
 
 ```text
-release/MashupArena-Setup-0.3.0-beta.2.exe
-release/MashupArena-0.3.0-beta.2-portable.exe
+release/MashupArena-Setup-0.3.0-beta.3.exe
+release/MashupArena-0.3.0-beta.3-portable.exe
 release/win-unpacked/Mashup Arena.exe
 ```
 
-The setup executable detects an older NSIS installation by its pinned app GUID, uninstall entry, version and existing executable. It keeps the previous per-user/per-machine mode and installation folder, asks once, then upgrades in place without showing the first-install wizard again. The old uninstaller is called with app-data preservation; matching/newer versions are not overwritten. A fresh install still shows the normal setup choices. Portable copies do not register an installation and cannot be detected for this update flow. Builds are unsigned unless an Authenticode certificate is configured, so Windows SmartScreen may show a warning.
+The setup executable detects an older NSIS installation by its pinned app GUID, uninstall entry, version and existing executable. It keeps the previous per-user/per-machine mode and installation folder, then presents **Cập nhật → installation progress → Cập nhật hoàn tất** instead of the first-install choices. The old uninstaller is called with app-data preservation; matching/newer versions are not overwritten. A fresh install still shows the normal setup choices. Portable copies do not register an installation and cannot be detected for this update flow. Builds are unsigned unless an Authenticode certificate is configured, so Windows SmartScreen may show a warning.
 
 To build through GitHub, open **Actions → Mashup Arena Windows x64 → Run workflow**. After the green run, download and unzip the `MashupArena-Windows-x64` artifact. Do not call this beta LAN-certified until two real machines have completed the test matrix in `design/online-3d/PROTOCOL.md`.
 
