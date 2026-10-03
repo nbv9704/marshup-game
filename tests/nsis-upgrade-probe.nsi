@@ -2,7 +2,7 @@
 ; write is the result file beside this probe executable (never app files/keys).
 Unicode true
 !ifndef VERSION
-  !define VERSION "0.3.0-beta.2"
+  !define VERSION "0.3.0-beta.4"
 !endif
 !define APP_EXECUTABLE_FILENAME "Mashup Arena.exe"
 !define BUILD_RESOURCES_DIR "..\build"

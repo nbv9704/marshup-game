@@ -34,8 +34,8 @@ npm run dist
 Expected beta outputs after `npm run dist`:
 
 ```text
-release/MashupArena-Setup-0.3.0-beta.3.exe
-release/MashupArena-0.3.0-beta.3-portable.exe
+release/MashupArena-Setup-0.3.0-beta.4.exe
+release/MashupArena-0.3.0-beta.4-portable.exe
 release/win-unpacked/Mashup Arena.exe
 ```
 

@@ -9,7 +9,7 @@ if (process.platform !== 'win32') throw new Error('Installer-version probe requi
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const load = createRequire(import.meta.url);
 const packageJson = load(path.join(root, 'package.json'));
-assert.equal(packageJson.version, '0.3.0-beta.3', 'Update NSIS probe fixtures when the installer version changes');
+assert.equal(packageJson.version, '0.3.0-beta.4', 'Update NSIS probe fixtures when the installer version changes');
 const { UUID } = load('builder-util-runtime');
 const historicalGuid = UUID.v5(packageJson.build.appId, UUID.parse('50e065bc-3134-11e6-9bab-38c9862bdaf3'));
 assert.equal(packageJson.build.nsis.guid, historicalGuid, 'NSIS GUID must continue to match 0.1/0.2 installs');

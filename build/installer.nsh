@@ -6,14 +6,6 @@ Var MashupUpgrade
 
 !ifdef PRODUCT_NAME
 !include "nsDialogs.nsh"
-; Treat a version-checked existing install like --updated for the page skipper.
-; Keep electron-builder's original command-line behavior as a fallback.
-!macroundef _isUpdated
-!macro _isUpdated _a _b _t _f
-  StrCmp "$MashupUpgrade" "1" `${_t}` 0
-  ${StdUtils.TestParameter} $R9 "updated"
-  StrCmp "$R9" "true" `${_t}` `${_f}`
-!macroend
 
 !macro customWelcomePage
   Page custom MashupUpgradePageCreate
@@ -43,6 +35,35 @@ Var MashupUpgrade
       StrCpy $isForceCurrentInstall "1"
     ${EndIf}
   ${EndIf}
+!macroend
+
+; electron-builder's stock directory page only skips for --updated. Move that
+; page into our hook so a downloaded installer can skip it after registry-based
+; upgrade detection, without changing where fresh installs can be placed.
+!macro customPageAfterChangeDir
+  !include "StrContains.nsh"
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE MashupDirectoryPre
+  !insertmacro MUI_PAGE_DIRECTORY
+  !define MUI_PAGE_CUSTOMFUNCTION_PRE MashupInstFilesPre
+
+  Function MashupDirectoryPre
+    ${If} $MashupUpgrade == "1"
+      Abort
+    ${EndIf}
+    ${If} ${isUpdated}
+      Abort
+    ${EndIf}
+  FunctionEnd
+
+  Function MashupInstFilesPre
+    ${If} $MashupUpgrade == "1"
+      Return
+    ${EndIf}
+    ${StrContains} $0 "${APP_FILENAME}" $INSTDIR
+    ${If} $0 == ""
+      StrCpy $INSTDIR "$INSTDIR\${APP_FILENAME}"
+    ${EndIf}
+  FunctionEnd
 !macroend
 
 !macro customFinishPage
