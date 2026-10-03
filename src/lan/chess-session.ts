@@ -1,6 +1,7 @@
 import { descriptor } from '../games/chess/descriptor';
 import { chooseChessMove } from '../games/chess/bot';
-import { applyMove, legalMoves, newChessState, type ChessMove, type ChessState } from '../games/chess/rules';
+import { applyMove, legalMoves, newChessState, restoreChessState, serializeChessState, type ChessMove, type ChessState } from '../games/chess/rules';
+import type { JsonObject } from '../contracts/types';
 
 /** Pure host-side match authority. A future transport must bind each token to its connection. */
 export interface ChessLanIntent {
@@ -46,6 +47,15 @@ export class ChessLanHostSession {
   private closed = false;
   private state: ChessState = newChessState();
   private readonly dedup = new Map<string, { fingerprint: string; result: ChessLanResult }>();
+
+  /** Full state stays local; never send this snapshot to a LAN guest. */
+  snapshotForLocalSave(): JsonObject { return serializeChessState(this.state); }
+
+  static restoreLocalSave(input: unknown): ChessLanHostSession {
+    const session = new ChessLanHostSession();
+    session.state = restoreChessState(input);
+    return session;
+  }
 
   /** Each committed Chess move is a safe boundary for replacing the bot seat. */
   join(rulesetVersion: string): { ok: true; token: string; view: ChessLanView } | { ok: false; error: ChessLanError } {

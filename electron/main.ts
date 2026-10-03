@@ -6,9 +6,12 @@ import { commitSave, flushWrites, loadSave, loadWindow, logError, saveWindow } f
 import { LanController } from './lan-controller';
 
 const APP_ID = 'games.mashuparena.desktop';
-const isSmoke = process.argv.includes('--smoke-test');
+const isVisualSmoke = process.argv.includes('--chess-visual-smoke');
+const isSmoke = process.argv.includes('--smoke-test') || isVisualSmoke;
 const devServer = !app.isPackaged && process.env['VITE_DEV_SERVER_URL'] === 'http://127.0.0.1:5173'
   ? 'http://127.0.0.1:5173' : undefined;
+if (isVisualSmoke && process.env['MASHUP_SMOKE_DATA_DIR'])
+  app.setPath('userData', process.env['MASHUP_SMOKE_DATA_DIR']);
 const single = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 let splash: BrowserWindow | null = null;
@@ -20,7 +23,7 @@ const lan = new LanController((channel, payload) => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
 });
 if (!single) app.quit();
-if (isSmoke) app.disableHardwareAcceleration();
+if (isSmoke && !isVisualSmoke) app.disableHardwareAcceleration();
 app.setAppUserModelId(APP_ID);
 app.on('second-instance', () => {
   if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.show(); mainWindow.focus(); }
@@ -54,18 +57,44 @@ function installCsp() {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const dev = Boolean(devServer);
     const connect = dev ? "'self' http://127.0.0.1:5173 ws://127.0.0.1:5173" : "'none'";
+    const scripts = dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'";
     const policy = ["default-src 'self'", "object-src 'none'", "base-uri 'none'", "frame-src 'none'",
-      "script-src 'self'", "style-src 'self' 'unsafe-inline'", "font-src 'self' data:",
+      scripts, "style-src 'self' 'unsafe-inline'", "font-src 'self' data:",
       "img-src 'self' data:", `connect-src ${connect}`, "worker-src 'self' blob:"].join('; ');
     callback({responseHeaders:{...details.responseHeaders, 'Content-Security-Policy':[policy]}});
   });
 }
+async function runChessVisualSmoke(page: Electron.WebContents): Promise<void> {
+  try {
+    const marker = process.env['MASHUP_SMOKE_MARKER'];
+    if (!marker) throw new Error('Visual smoke marker missing');
+    const waitFor = async (selector: string) => {
+      for (let attempt = 0; attempt < 150; attempt++) {
+        if (await page.executeJavaScript(`Boolean(document.querySelector(${JSON.stringify(selector)}))`)) return;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      const body = await page.executeJavaScript('document.body.innerText.slice(0,1000)');
+      throw new Error(`Visual smoke selector missing: ${selector}; page=${body}`);
+    };
+    const click = async (selector: string) => {
+      await waitFor(selector);
+      await page.executeJavaScript(`document.querySelector(${JSON.stringify(selector)}).click()`);
+    };
+    await click('.hero .button.outline.large');
+    await click('.game-grid .game-tile button[aria-label^="Chess:"]');
+    await click('.game-detail .button.primary');
+    await click('.chess3d-setup .panel:first-child .button.primary');
+    await waitFor('.chess3d-canvas canvas');
+    await click('.chess3d-hud .button.primary');
+    await page.executeJavaScript("document.querySelector('.chess3d-shell').scrollIntoView({block:'center'})");
+    await new Promise(resolve => setTimeout(resolve, 1_000));
+    await fs.writeFile(marker, (await page.capturePage()).toPNG());
+  } catch (err) { await logError(err); process.exitCode=1; }
+  app.quit();
+}
 function registerIpc() {
   const guard = (event:Electron.IpcMainInvokeEvent) => { if (!trusted(event)) throw new Error('Untrusted IPC sender'); };
-  const guardLan = (event:Electron.IpcMainInvokeEvent) => {
-    guard(event);
-    if (!devServer) throw new Error('LAN preview is not enabled in packaged builds');
-  };
+  const guardLan = guard;
   ipcMain.handle('save:load', async e => { guard(e); return loadSave(); });
   ipcMain.handle('save:commit', async (e, doc: unknown) => { guard(e); return commitSave(doc); });
   ipcMain.handle('error:log', async (e, error: unknown) => {
@@ -117,7 +146,7 @@ function registerIpc() {
     ready = true;
     if (splash && !splash.isDestroyed()) { splash.close(); splash=null; }
     if (!isSmoke) { mainWindow?.show(); mainWindow?.focus(); }
-    else {
+    else if (!isVisualSmoke) {
       try {
         const marker = process.env['MASHUP_SMOKE_MARKER'];
         if (!marker) throw new Error('MASHUP_SMOKE_MARKER is not set');
@@ -136,7 +165,7 @@ async function createWindows() {
     await splash.loadFile(path.join(app.getAppPath(),'electron','splash.html'));
     splash.show();
   }
-  mainWindow = new BrowserWindow({ ...bounds, title:'Mashup Arena · Offline Arcade',show:false,
+  mainWindow = new BrowserWindow({ ...bounds, title:'Mashup Arena · Offline / LAN',show:false,
     minWidth:1024,minHeight:600, backgroundColor:'#a52342',autoHideMenuBar:true,
     icon:path.join(app.getAppPath(),'build','icon.png'),
     webPreferences:{preload:path.join(__dirname,'preload.js'),contextIsolation:true,nodeIntegration:false,sandbox:true,
@@ -176,6 +205,10 @@ async function createWindows() {
   mainWindow.on('close',()=>{if(boundsTimer)clearTimeout(boundsTimer);queueBounds();});
   if (devServer) await mainWindow.loadURL(devServer);
   else await mainWindow.loadFile(path.join(app.getAppPath(),'dist','index.html'));
+  if (isVisualSmoke && !mainWindow.isDestroyed()) {
+    mainWindow.showInactive();
+    void runChessVisualSmoke(mainWindow.webContents);
+  }
 }
 app.whenReady().then(async () => {
   if (!single) return;

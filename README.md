@@ -1,6 +1,6 @@
-# MASHUP ARENA — Phase 3
+# MASHUP ARENA — Chess 3D / LAN beta
 
-Windows 10/11 x64 offline arcade built with TypeScript, React, PixiJS, Vite and Electron. Phase 3 ships seven playable modules while keeping every unfinished catalog entry behind the verified registry.
+Windows 10/11 x64 offline-first arcade built with TypeScript, React, PixiJS, Three.js, Vite and Electron. Seven 2D games remain playable. Chess additionally has a procedural first-person 3D room with Focus Board, a solo bot, local resume, and optional host-authoritative LAN beta. This is **not** a final release: two-machine/Radmin testing, rematch, timers and further polish are still required.
 
 ## Playable now
 
@@ -11,8 +11,9 @@ Windows 10/11 x64 offline arcade built with TypeScript, React, PixiJS, Vite and 
 - Ludo: 2–4-player race rules, safe squares, captures, blocks, exact finish and three-six handling.
 - Xiangqi: palace/river restrictions, horse leg, elephant eye, cannon screens, flying generals and check safety.
 - Triple Spark: the Phase 2 pipeline trainer with bot and local hotseat modes.
+- Chess 3D beta: enter from the Chess catalog card; walk with WASD, click to look, press F for Focus Board, pick a piece and highlighted destination. Solo progress saves locally. Open/Join LAN uses an explicit adapter or IPv4:port; discovery is optional and reconnection holds a dropped guest seat for 90 seconds.
 
-All modules are deterministic, JSON-serializable, validated independently of React/PixiJS, bilingual, auto-saved after valid actions and available offline. Casino credits are entertainment-only and have no cash value.
+The original seven modules are deterministic, JSON-serializable, validated independently of React/PixiJS, bilingual, auto-saved after valid actions and available offline. The Chess 3D solo mode uses the same validated Chess rules and stores a full local snapshot. LAN sends only the public Chess projection and must be used on a trusted physical or virtual LAN; traffic is not encrypted. Casino credits are entertainment-only and have no cash value.
 
 ## Run from source
 
@@ -27,38 +28,40 @@ npm run dist
 ```
 
 `npm test` runs rule/integration tests and strict TypeScript checks. `npm run dist` also creates the Windows installer and portable executable.
+On Windows without symlink permission, the packaging script automatically skips executable icon/metadata editing; game content and both `.exe` outputs are unchanged. A branded executable requires Windows Developer Mode or a symlink-capable CI runner. Neither option signs the app; code signing needs a separate certificate.
 
 ## Windows executables
 
-Expected Phase 3 outputs:
+Expected beta outputs after `npm run dist`:
 
 ```text
-release/MashupArena-Setup-0.2.0.exe
-release/MashupArena-0.2.0-portable.exe
+release/MashupArena-Setup-0.3.0-beta.1.exe
+release/MashupArena-0.3.0-beta.1-portable.exe
 release/win-unpacked/Mashup Arena.exe
 ```
 
 The setup executable installs per user and can create a desktop shortcut. The portable executable extracts its application payload to a temporary folder when launched. Builds are unsigned unless an Authenticode certificate is configured, so Windows SmartScreen may show a warning.
 
-To build through GitHub, open **Actions → Mashup Arena Windows x64 → Run workflow**. After the green run, download and unzip the `MashupArena-0.2.0-Windows-x64` artifact.
+To build through GitHub, open **Actions → Mashup Arena Windows x64 → Run workflow**. After the green run, download and unzip the `MashupArena-Windows-x64` artifact. Do not call this beta LAN-certified until two real machines have completed the test matrix in `design/online-3d/PROTOCOL.md`.
 
 Each distributable is roughly 80–90 MB because Electron includes a Chromium renderer, Node/Electron runtime, application code, fonts and assets. The workflow ZIP is roughly twice that size because it contains both the installer and portable variants.
 
 ## Architecture
 
-- `electron/`: sandboxed desktop lifecycle, narrow preload bridge and atomic offline persistence.
+- `electron/`: sandboxed desktop lifecycle, narrow preload bridge, LAN socket ownership and atomic offline persistence.
 - `src/contracts/`: JSON-safe game/runtime contracts.
 - `src/registry/registry.ts`: the only source of Play-enabled modules.
 - `src/games/`: isolated deterministic rules, validation, scenes, tutorials and bot helpers.
 - `src/app/`: React navigation, generic Phase 3 match screen, settings, profile and autosave.
-- `src/graphics/`: PixiJS rendering with DOM fallback.
+- `src/graphics/`: PixiJS rendering with DOM fallback, plus the procedural Three.js Chess room.
+- `src/lan/`: pure Chess host authority, bounded TCP transport and best-effort UDP discovery.
 - `phase1-docs/`: architecture, recipe catalog and release design documents.
 - `tests/`: catalog, rules, invalid-action and complete bot-simulation checks.
 
-The next roadmap gate is Phase 4: the Fusion compiler, compatibility validation and the first audited fusion recipe, Chess + Color Clash. Unfinished fusion/catalog features are not exposed as playable UI.
+The next gate is to finish and certify the Chess 3D LAN slice on two real machines: direct IP, discovery fallback, reconnect, host/guest lifecycle, rematch, accessibility and performance. Only then should more 3D games and the Fusion compiler expand. Unfinished fusion/catalog features are not exposed as playable UI.
 
 ## Keyboard and data
 
-`F11` toggles fullscreen, `/` focuses library search, `Esc` goes back and `Alt+Left` returns home. Settings include Vietnamese/English, mute, high contrast, reduced motion and font scaling. Saves live locally in Electron's user-data folder and can be exported/imported from Settings.
+`F11` toggles fullscreen, `/` focuses library search, and `Alt+Left` returns home. Outside Chess 3D, `Esc` goes back; inside Chess 3D it releases the cursor and opens pause. Settings include Vietnamese/English, mute, high contrast, reduced motion and font scaling. Saves live locally in Electron's user-data folder and can be exported/imported from Settings.
 
 Brand/legal: use original artwork and names for commercial distribution, and complete a rights review for third-party game references.

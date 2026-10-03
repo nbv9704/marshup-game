@@ -1,7 +1,7 @@
 {
   "name": "mashup-arena",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0-beta.1",
   "description": "Offline Windows desktop arcade shell and deterministic practice game",
   "author": "Mashup Arena",
   "license": "UNLICENSED",
@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p electron/tsconfig.json",
     "build:electron": "node scripts/build-electron.mjs",
     "build": "npm run typecheck && vite build && node scripts/check-release-bundle.mjs && npm run build:electron",
-    "dist": "npm test && npm run build && electron-builder --win nsis portable --x64 --publish never",
+    "dist": "npm test && npm run build && node scripts/package-windows.mjs",
     "test:core-offline": "node scripts/test-core-offline.mjs"
   },
   "devDependencies": {
@@ -27,6 +27,7 @@
     "@types/node": "22.15.30",
     "@types/react": "19.1.7",
     "@types/react-dom": "19.1.6",
+    "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "4.5.2",
     "concurrently": "9.2.0",
     "cross-env": "7.0.3",
@@ -36,6 +37,7 @@
     "pixi.js": "8.11.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "three": "^0.186.1",
     "typescript": "5.8.3",
     "vite": "6.3.5",
     "vitest": "3.2.4",

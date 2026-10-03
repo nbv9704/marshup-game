@@ -15,7 +15,8 @@ import '../styles/main.css';
 import '../styles/party.css';
 const LanChessDevScreen = import.meta.env.DEV
   ? lazy(async () => ({ default: (await import('./LanChessDevScreen')).LanChessDevScreen })) : null;
-type Page = 'home'|'library'|'trainer'|'game'|'profile'|'settings'|'styleGuide'|'lanDev';
+const Chess3DScreen = lazy(async () => ({ default: (await import('./Chess3DScreen')).Chess3DScreen }));
+type Page = 'home'|'library'|'trainer'|'game'|'chess3d'|'profile'|'settings'|'styleGuide'|'lanDev';
 type Category = 'all'|'board'|'card'|'casino'|'favorites';
 const ICONS:Record<string,string>={chess:'♚',xiangqi:'帥',go:'◉',gomoku:'✣',ludo:'♟',property:'◆',
   checkers:'◈',othello:'◑',backgammon:'⚄',snakes:'↝',connect4:'●',tictactoe:'✕',mancala:'◐',dominoes:'▦',
@@ -62,11 +63,15 @@ export default function App(){
     });
   },[update]);
   const replace=useCallback((d:SaveDocument)=>update(()=>d),[update]);
-  const go=useCallback((target:Page)=>{setSelected(null);setPage(target);if(target==='library')setCategory('all');},[]);
+  const go=useCallback((target:Page, alreadyConfirmed=false)=>{
+    if (page==='chess3d' && target!==page && !alreadyConfirmed &&
+      !window.confirm('Rời phòng Chess 3D? Ván LAN sẽ đóng hoặc mất kết nối.')) return;
+    setSelected(null);setPage(target);if(target==='library')setCategory('all');
+  },[page]);
   useEffect(()=>{
     const key=(e:KeyboardEvent)=>{
       const typing=e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement||e.target instanceof HTMLSelectElement;
-      if(e.key==='Escape'){setSelected(null);if(page!=='home')setPage('home');return;}
+      if(e.key==='Escape'&&page!=='chess3d'){setSelected(null);if(page!=='home')setPage('home');return;}
       if(e.key==='/'&&!typing){e.preventDefault();setPage('library');requestAnimationFrame(()=>input.current?.focus());}
       if(e.key==='F11'&&!window.arena){e.preventDefault();if(!document.fullscreenElement)void document.documentElement.requestFullscreen();else void document.exitFullscreen();}
       if(e.altKey && e.key==='ArrowLeft')go('home');
@@ -79,7 +84,7 @@ export default function App(){
   },[]);
   useEffect(()=>{
     if(!doc)return;
-    const category=page==='game'&&activeGame?readyGames.find(game=>game.descriptor.id===activeGame)?.descriptor.category:page==='styleGuide'?'fusion':'card';
+    const category=page==='chess3d'?'board':page==='game'&&activeGame?readyGames.find(game=>game.descriptor.id===activeGame)?.descriptor.category:page==='styleGuide'?'fusion':'card';
     configureMusic(category??'card',doc.settings.audio.music,doc.settings.audio.muted);
   },[doc?.settings.audio.music,doc?.settings.audio.muted,page,activeGame]);
   if(loadError)return <div className="boot-error"><h2>Unable to load saved data</h2><p>{loadError}</p><p>Check errors.log in the application's userData folder.</p></div>;
@@ -96,11 +101,11 @@ export default function App(){
       <div className="nav-divider"/>
       {nav.map(([id,icon,label])=><button key={id} className={`nav-item ${page===id?'active':''}`} onClick={()=>{sound();go(id);}}
         aria-label={t(label)} title={t(label)}><span>{icon}</span><small>{t(label)}</small></button>)}
-      <div className="side-bottom"><span className="status-light"/><small>{t('offline')}</small></div>
+      <div className="side-bottom"><span className="status-light"/><small>{page==='chess3d'?'LOCAL / LAN':t('offline')}</small></div>
     </aside>
     <div className="shell"><header className="app-topbar">
       <button className="mobile-brand" onClick={()=>go('home')}>✦ MASHUP ARENA</button>
-      <div className="breadcrumb"><PartyLogo compact/><span className="breadcrumb-divider">/</span>{page==='lanDev'?'LAN LAB':t(page)}</div>
+      <div className="breadcrumb"><PartyLogo compact/><span className="breadcrumb-divider">/</span>{page==='lanDev'?'LAN LAB':page==='chess3d'?'CHESS 3D':t(page)}</div>
       <div className="topbar-actions"><div className="connection"><span className="status-light"/> LOCAL SYSTEM</div>
         <span className="chips-pill" title={t('chips')}>◈ {doc.profile.virtualChips.toLocaleString()}</span>
         <button className="profile-pill" onClick={()=>go('profile')} title={t('profile')}><span><MascotAvatar id={avatar} size={34}/></span><b>{doc.profile.displayName}</b>
@@ -110,7 +115,7 @@ export default function App(){
       <section className="hero">
         <AmbientStage onReady={hydrated} reducedMotion={doc.settings.accessibility.reducedMotion}/>
         <div className="hero-aura"/><div className="hero-content">
-          <div className="eyebrow hero-label"><span className="status-light"/> {t('subtitle')} <span className="hero-slash">//</span> VERSION 0.2</div>
+          <div className="eyebrow hero-label"><span className="status-light"/> {t('subtitle')} <span className="hero-slash">//</span> VERSION 0.3 BETA</div>
           <PartyLogo/><h1>{t('heroTitle')}</h1><p>{t('heroBody')}</p>
           <div className="button-row"><button className="button primary large" onClick={()=>{sound();go('trainer');}}>✦ {t('play')}</button>
             <button className="button outline large" onClick={()=>{sound();go('library');}}>{t('explore')} ↗</button></div>
@@ -146,11 +151,13 @@ export default function App(){
     </main>}
     {page==='trainer' && <TripleSparkScreen doc={doc} update={update} locale={locale} t={t} onBack={()=>go('home')}/>}
     {page==='game' && activeGame && <ArcadeGameScreen gameId={activeGame} doc={doc} update={update} locale={locale} onBack={()=>go('library')}/>}
+    {page==='chess3d' && <Suspense fallback={<main className="page"><p>Đang dựng phòng cờ 3D…</p></main>}><Chess3DScreen doc={doc} update={update}
+      onLibrary={()=>go('library',true)} onHome={()=>go('home',true)}/></Suspense>}
     {page==='profile' && <ProfileView doc={doc} update={update} t={t} avatar={avatar} />}
     {page==='settings' && <SettingsView doc={doc} update={update} replace={replace} t={t} />}
     {import.meta.env.DEV&&page==='styleGuide'&&<StyleGuide locale={locale} onBack={()=>go('home')}/>}
     {LanChessDevScreen&&page==='lanDev'&&<Suspense fallback={<main className="page"><p>Đang tải LAN Lab…</p></main>}><LanChessDevScreen onBack={()=>go('home')}/></Suspense>}
-    <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.2.0</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
+    <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.3.0 BETA</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
       <span>{t('entertainment')}</span>{import.meta.env.DEV&&<><button className="style-guide-link" onClick={()=>go('styleGuide')}>STYLE GUIDE ↗</button><button className="style-guide-link" onClick={()=>go('lanDev')}>LAN LAB ↗</button></>}</footer>
     </div>
     {selected && <div className="modal-backdrop" onClick={()=>setSelected(null)}>
@@ -161,7 +168,7 @@ export default function App(){
         <div className="detail-row"><span>{t('gameDesign')}</span><strong>{readyGames.some(game=>game.descriptor.id===selected.id)?t('ready'):t('planned')}</strong></div>
         <div className="detail-row"><span>{t('release')}</span><strong>{READY_IDS.has(selected.id)?t('ready'):`PHASE ${selected.phase}`}</strong></div>
         <p>{t('ruleNote')}</p><div className="mechanic-tags">{selected.tags.map(x=><span key={x}>#{x}</span>)}</div>
-        <div className="button-row">{READY_IDS.has(selected.id)&&<button className="button primary" onClick={()=>{setActiveGame(selected.id);setSelected(null);setPage('game');}}>{t('playNow')}</button>}<button className="button outline" onClick={()=>toggleFavorite(selected.id)}>
+        <div className="button-row">{selected.id==='chess'&&<button className="button primary" onClick={()=>{setSelected(null);setPage('chess3d');}}>CHESS 3D</button>}{READY_IDS.has(selected.id)&&<button className="button primary" onClick={()=>{setActiveGame(selected.id);setSelected(null);setPage('game');}}>{t('playNow')} 2D</button>}<button className="button outline" onClick={()=>toggleFavorite(selected.id)}>
           {doc.profile.favorites.includes(selected.id)?'♥':'♡'} {t('favorites')}</button>
           <button className="button ghost" onClick={()=>setSelected(null)}>{t('close')}</button></div>
       </section></div>}

@@ -1,0 +1,27 @@
+.chess3d-shell{position:relative;isolation:isolate;width:100%;height:min(72vh,780px);min-height:520px;overflow:hidden;border:6px solid #ffe7a2;border-radius:30px;background:#222b50;box-shadow:0 11px 0 #6d325b,0 25px 45px #21153888}
+.chess3d-canvas,.chess3d-canvas canvas{display:block;width:100%;height:100%}
+.chess3d-hud{position:absolute;top:18px;left:18px;right:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;pointer-events:none}
+.chess3d-hud .button{margin-left:auto;pointer-events:auto}
+.chess3d-pill{padding:10px 16px;border:3px solid #fff4d7;border-radius:99px;background:#584273dd;color:#fff9da;font-weight:900;letter-spacing:.07em;box-shadow:0 4px 0 #402751}
+.chess3d-pill.danger{background:#df4059;color:white}
+.chess3d-crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:35px;color:#fff6ce;text-shadow:0 2px 8px #261939;pointer-events:none}
+.chess3d-instructions,.chess3d-selection{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);padding:9px 18px;border-radius:99px;background:#2e2e58dd;color:#fff7dc;text-align:center;font-size:13px;font-weight:800;pointer-events:none}
+.chess3d-selection{bottom:62px;background:#365e66ee}
+.chess3d-overlay{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:#16102b99}
+.chess3d-dialog{width:min(500px,calc(100% - 30px));padding:24px;text-align:center}
+.chess3d-dialog .button-row{justify-content:center;flex-wrap:wrap;margin-top:20px}
+.chess3d-room{max-width:1600px}
+.chess3d-room .section-heading{gap:18px}
+.chess3d-setup{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.chess3d-setup .panel{padding:25px;display:flex;flex-direction:column;gap:12px}
+.chess3d-setup .panel h2{margin:0}
+.chess3d-setup .panel p{line-height:1.5;flex:1}
+.chess3d-setup label{display:flex;flex-direction:column;gap:6px;font-weight:800}
+.chess3d-setup select,.chess3d-setup input{width:100%;padding:12px;border:3px solid #fff3d2;border-radius:14px;background:#fff9ed;color:#563451;font:inherit}
+.chess3d-room-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px;padding:13px 17px}
+.chess3d-room-bar small{font-size:12px;opacity:.8}
+.chess3d-result{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:#201336bc}
+.chess3d-result .panel{width:min(520px,calc(100% - 28px));padding:35px;text-align:center}
+.chess3d-result h2{font-size:clamp(38px,5vw,68px);margin:8px 0}
+.chess3d-result .button-row{justify-content:center;flex-wrap:wrap;margin-top:24px}
+@media(max-width:900px){.chess3d-setup{grid-template-columns:1fr}.chess3d-shell{min-height:430px;height:65vh}.chess3d-hud .button{margin-left:0}.chess3d-instructions{font-size:11px}}

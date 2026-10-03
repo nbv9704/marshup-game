@@ -38,7 +38,7 @@ jobs:
           if (!(Test-Path $exe)) { throw "Unpacked application not found: $exe" }
           $env:MASHUP_SMOKE_MARKER = Join-Path $env:RUNNER_TEMP 'arena-unpacked-ready.json'
           Remove-Item $env:MASHUP_SMOKE_MARKER -ErrorAction SilentlyContinue
-          $p = Start-Process -FilePath $exe -ArgumentList '--smoke-test' -PassThru
+          $p = Start-Process -FilePath $exe -ArgumentList '--smoke-test' -PassThru -WindowStyle Hidden
           if (-not $p.WaitForExit(60000)) { Stop-Process -Id $p.Id -Force; throw 'Unpacked launch timed out' }
           if ($p.ExitCode -ne 0) { throw "Unpacked app exit code $($p.ExitCode)" }
           if (!(Test-Path $env:MASHUP_SMOKE_MARKER)) { throw 'React renderer/store readiness marker missing' }
@@ -53,7 +53,7 @@ jobs:
           $portable = Join-Path (Get-Location) "release/MashupArena-$version-portable.exe"
           if (!(Test-Path $portable)) { throw 'Portable EXE missing' }
           $existingIds = @(Get-CimInstance Win32_Process -Filter "Name = 'Mashup Arena.exe'" | Select-Object -ExpandProperty ProcessId)
-          $p = Start-Process -FilePath $portable -PassThru
+          $p = Start-Process -FilePath $portable -PassThru -WindowStyle Hidden
           $deadline = [DateTime]::UtcNow.AddSeconds(90)
           $child = $null
           while (!$child -and [DateTime]::UtcNow -lt $deadline) {
@@ -83,7 +83,7 @@ jobs:
       - name: Upload installable and portable executables + lockfile
         uses: actions/upload-artifact@v4
         with:
-          name: MashupArena-0.2.0-Windows-x64
+          name: MashupArena-Windows-x64
           path: |
             release/MashupArena-Setup-*.exe
             release/MashupArena-*-portable.exe

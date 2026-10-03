@@ -10,13 +10,15 @@ Completed game modes should be playable solo, using bots where the rules require
 
 ## What exists now
 
-The repository's 0.2.0 Electron app has seven playable offline 2D plugins and local saves. This package contains a clickable **concept**, not production 3D. The earlier server/auth prototype and documents have been replaced so they do not misrepresent the approved direction. Phase 2 now has Chess host/client TCP, 90-second reconnect logic and best-effort UDP discovery with loopback tests. These modules are wired into Electron main through a narrow preload bridge **for development only**. Run `npm run dev` and open **LAN LAB** from the Home footer to exercise host, discovery, direct IP, Chess moves and reconnect on a deliberately diagnostic 2D board. The bot fills an empty guest seat automatically; a friend may replace it at a committed turn boundary. There is no LAN feature enabled in the packaged EXE, and a two-machine/Radmin test is still required. There is no new executable from this foundation update.
+The repository now has seven playable offline 2D plugins and local saves. Chess also has a procedural first-person 3D room with Focus Board and a solo bot. The Chess catalog card opens this beta mode; it can save and resume a solo match. Chess host/client TCP, 90-second reconnect and best-effort UDP discovery are wired through Electron's narrow preload bridge in development **and** packaged builds. A guest can enter the host's IPv4 address manually when discovery fails. The bot fills an empty guest seat and can be replaced at a committed turn boundary. The app labels LAN as beta because a two-machine/Radmin test has not happened yet; do not treat the loopback tests as LAN certification.
+
+The older **LAN LAB** diagnostic board remains available in development only. It is not the player-facing packaged interface. The packaged 3D beta is a vertical slice, not the whole envisioned game: animated remote avatars, timer/rematch/chat features, the remaining 3D games, Fusion execution and final polish remain to be built.
 
 Open [prototype.html](prototype.html) locally. It demonstrates local-profile entry, Home, Game Select, Solo, Open to LAN, Join LAN (discovered list and direct IP), room, first-person/Focus Chess and result. All hosts, moves, and connection states in the prototype are simulated in the browser. No network request or account creation occurs.
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md), [PROTOCOL.md](PROTOCOL.md), [SECURITY.md](SECURITY.md), [VISUAL_DESIGN.md](VISUAL_DESIGN.md), and [ESTIMATE.md](ESTIMATE.md) for implementation boundaries and phase gates.
 
-The existing offline executables, if present locally, are `release/ci-artifact-0.2.0/release/MashupArena-Setup-0.2.0.exe` and `MashupArena-0.2.0-portable.exe`. They are offline 2D, **not** the LAN/3D design. Each is about 85–90 MB largely because Electron packages a Chromium runtime; the installer and portable build are alternatives, not files to install together.
+The current Chess 3D beta outputs are `release/MashupArena-Setup-0.3.0-beta.1.exe` and `release/MashupArena-0.3.0-beta.1-portable.exe`. The older `0.2.0` executables, if still present, contain only the 2D offline app. Installer and portable are alternatives, not files to install together. Each is roughly 84 MB largely because Electron packages its Chromium runtime. These local builds are unsigned; a Windows machine without symlink privilege omits executable icon/metadata editing, as documented in the root README.
 
 ## Revised phase gates
 

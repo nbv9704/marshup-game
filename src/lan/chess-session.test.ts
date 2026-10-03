@@ -81,6 +81,18 @@ describe('host-authoritative Chess LAN session core', () => {
     expect(host.view().state.activePlayer).toBe('p1');
   });
 
+  it('round-trips a full solo save including repetition bookkeeping', () => {
+    const host = new ChessLanHostSession();
+    expect(host.submit(host.hostToken, intent('saved', 0, 12, 28))).toMatchObject({ ok: true, revision: 1 });
+    const saved = host.snapshotForLocalSave();
+    expect(saved).toHaveProperty('positionCounts');
+    expect(host.view().state).not.toHaveProperty('positionCounts');
+    const resumed = ChessLanHostSession.restoreLocalSave(saved);
+    expect(resumed.view().revision).toBe(1);
+    expect(resumed.botTurn('easy')).toMatchObject({ ok: true, revision: 2 });
+    expect(() => ChessLanHostSession.restoreLocalSave({ board: [] })).toThrow();
+  });
+
   it('allows a friend to take the bot seat at a committed turn boundary', () => {
     const host = new ChessLanHostSession();
     expect(host.submit(host.hostToken, intent('solo-white', 0, 12, 28))).toMatchObject({ ok: true, revision: 1 });

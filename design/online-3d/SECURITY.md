@@ -1,6 +1,6 @@
 # Casual LAN threat model
 
-This is a design-stage release contract. The packaged offline app does not expose a LAN listener; a deliberately labeled development-only LAN Lab can open one for testing. Casual play removes account/competitive infrastructure, **not** network input risks. Hosts and guests choose to trust one another socially; the app must still protect each PC and keep private game information separated.
+This is a beta release contract. The packaged app can expose a Chess LAN listener only after the host explicitly selects Open to LAN and an adapter; the development-only LAN Lab is separate. Casual play removes account/competitive infrastructure, **not** network input risks. Hosts and guests choose to trust one another socially; the app must still protect each PC and keep private game information separated.
 
 | Risk | Control / acceptance gate |
 | --- | --- |

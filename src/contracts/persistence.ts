@@ -56,7 +56,7 @@ export interface DesktopBridge {
   exportRecipe(code: string): Promise<string | null>;
   importRecipe(): Promise<string | null>;
   getAppVersion(): Promise<string>;
-  /** Development-only until the complete 3D Chess LAN vertical slice is ready. */
+  /** Explicit Open/Join LAN commands; sockets and seat tokens stay in Electron main. */
   lanListAdapters(): Promise<readonly { name:string; address:string; netmask:string; broadcast:string }[]>;
   lanStartHost(input:{adapterAddress:string;port:number;roomName:string}): Promise<{address:string;port:number;roomEpoch:string;discoveryAvailable:boolean}>;
   lanHostView(): Promise<ChessLanView|null>;
