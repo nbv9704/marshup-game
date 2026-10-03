@@ -63,12 +63,13 @@ Customization layers are color/skin tone, hat, face decal, outfit, and later emo
 
 ## UI screen concepts
 
-- **Login/Register:** deep crimson radial background, large original logo, one cream rounded card, clear email/password fields, show-password, strength meter, terms/age notice, “Play vs Bot (Offline)” separated from online action. Never simulate a successful credential check in shipping UI.
-- **Home:** mascot spotlight and sunburst, Play as primary action, active account/rank/chips, Settings/Quit. Fusion/Shop/Friends buttons appear only in a release that implements them.
+- **Local profile/start:** deep crimson radial background, large original logo, one cream rounded card for display name/avatar. No mandatory email, password, login or network check. Proceed to Home even with no connection.
+- **Home:** mascot spotlight and sunburst, Play Solo as primary action, Join LAN as a separate optional action, local profile/chips, Settings/Quit. Fusion/Shop/Friends buttons appear only in a release that implements them.
 - **Game Select:** searchable glossy card grid, Board/Card/Casino/Fusion/Favorites tabs, count/difficulty tags, ready-only Play. Planned catalog entries may appear as informational cards only in a separate roadmap view, not deceptive Play buttons.
-- **Room Lobby:** invite code front and center, two Chess seats with avatars and ready lights, rules/version summary, chat, host Start. Empty future seats are not actionable in v1 Chess.
+- **Open to LAN / Join LAN:** host sees selected network adapter, IP:port, invite code and firewall guidance. Join screen shows discovered rooms plus an equally visible manual IP:port field, because broadcast may fail on virtual LANs.
+- **Room Lobby:** invite code and address front and center, two Chess seats with avatars/bot/ready lights, rules/version summary, chat, host Start. A friend may replace a bot only at a safe boundary. Empty future seats are not actionable in v1 Chess.
 - **3D Room/HUD:** small top-right timer/turn/status, top-left room and ping, bottom-left chat/emote, bottom-right F Focus / ? Rules / Esc menu; all text has a dark backing. The board is the visual hero.
-- **Result:** large but brief banner, final board visible behind, XP and virtual chips with reduced-motion alternative, three equal-clear actions: rematch request, Game Select, Home. If rematch requires both players, button enters a waiting state with cancel.
+- **Result:** large but brief banner, final board visible behind, local XP and virtual chips with reduced-motion alternative, three equal-clear actions: rematch request, Game Select, Home. If LAN rematch requires both players, button enters a waiting state with cancel. If host closed, show a friendly session-ended explanation rather than a dead rematch control.
 
 ## Asset and performance production rules
 
