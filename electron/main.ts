@@ -3,10 +3,12 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as fs from 'node:fs/promises';
 import { commitSave, flushWrites, loadSave, loadWindow, logError, saveWindow } from './store';
+import { LanController } from './lan-controller';
 
 const APP_ID = 'games.mashuparena.desktop';
 const isSmoke = process.argv.includes('--smoke-test');
-const devServer = process.env['VITE_DEV_SERVER_URL'];
+const devServer = !app.isPackaged && process.env['VITE_DEV_SERVER_URL'] === 'http://127.0.0.1:5173'
+  ? 'http://127.0.0.1:5173' : undefined;
 const single = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 let splash: BrowserWindow | null = null;
@@ -14,6 +16,9 @@ let ready = false;
 let quitting = false;
 let boundsTimer: ReturnType<typeof setTimeout> | null = null;
 let recoveryAttempts = 0;
+const lan = new LanController((channel, payload) => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+});
 if (!single) app.quit();
 if (isSmoke) app.disableHardwareAcceleration();
 app.setAppUserModelId(APP_ID);
@@ -57,6 +62,10 @@ function installCsp() {
 }
 function registerIpc() {
   const guard = (event:Electron.IpcMainInvokeEvent) => { if (!trusted(event)) throw new Error('Untrusted IPC sender'); };
+  const guardLan = (event:Electron.IpcMainInvokeEvent) => {
+    guard(event);
+    if (!devServer) throw new Error('LAN preview is not enabled in packaged builds');
+  };
   ipcMain.handle('save:load', async e => { guard(e); return loadSave(); });
   ipcMain.handle('save:commit', async (e, doc: unknown) => { guard(e); return commitSave(doc); });
   ipcMain.handle('error:log', async (e, error: unknown) => {
@@ -72,6 +81,21 @@ function registerIpc() {
     return mainWindow.isFullScreen();
   });
   ipcMain.handle('app:version',e => {guard(e);return app.getVersion();});
+  ipcMain.handle('lan:adapters', e => { guardLan(e); return lan.listAdapters(); });
+  ipcMain.handle('lan:host-start', (e, input:unknown) => { guardLan(e); return lan.startHost(input); });
+  ipcMain.handle('lan:host-view', e => { guardLan(e); return lan.hostView(); });
+  ipcMain.handle('lan:host-move', (e, input:unknown) => { guardLan(e); return lan.hostMove(input); });
+  ipcMain.handle('lan:host-bot-turn', (e, difficulty:unknown) => { guardLan(e); return lan.hostBotTurn(difficulty); });
+  ipcMain.handle('lan:host-stop', e => { guardLan(e); return lan.stopHost(); });
+  ipcMain.handle('lan:browse-start', e => { guardLan(e); return lan.startBrowsing(); });
+  ipcMain.handle('lan:browse-list', e => { guardLan(e); return lan.discoveredRooms(); });
+  ipcMain.handle('lan:browse-stop', e => { guardLan(e); return lan.stopBrowsing(); });
+  ipcMain.handle('lan:guest-join', (e, input:unknown) => { guardLan(e); return lan.joinDirect(input); });
+  ipcMain.handle('lan:guest-rejoin', e => { guardLan(e); return lan.rejoin(); });
+  ipcMain.handle('lan:guest-view', e => { guardLan(e); return lan.guestView(); });
+  ipcMain.handle('lan:guest-move', (e, input:unknown) => { guardLan(e); return lan.guestMove(input); });
+  ipcMain.handle('lan:guest-snapshot', e => { guardLan(e); return lan.requestGuestSnapshot(); });
+  ipcMain.handle('lan:guest-leave', e => { guardLan(e); return lan.leaveGuest(); });
   ipcMain.handle('recipe:export', async (e, code:unknown) => {
     guard(e);
     if (typeof code !== 'string' || code.length > 16_000) throw new TypeError('Invalid recipe code');
@@ -165,7 +189,7 @@ app.on('before-quit',event => {
   quitting = true; event.preventDefault();
   if (boundsTimer) clearTimeout(boundsTimer);
   queueBounds();
-  void flushWrites().finally(()=>app.quit());
+  void Promise.allSettled([flushWrites(), lan.shutdown()]).finally(()=>app.quit());
 });
 process.on('uncaughtException',error=>{void logError(error);process.exitCode=1;app.quit();});
 process.on('unhandledRejection',error=>{void logError(error);});

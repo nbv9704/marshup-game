@@ -1,6 +1,6 @@
 # LAN protocol contract — proposed v1
 
-Design contract plus a tested standalone foundation, **not yet a shipped end-user feature**. The host EXE is intended to be authoritative. The first transport uses a bounded, newline-framed JSON stream over TCP (`src/lan/chess-tcp.ts` and `chess-client.ts`). Electron main integration is still pending; renderer must receive only a narrow preload API, not raw Node networking. Best-effort UDP discovery exists in `src/lan/discovery.ts`, but is not wired to the app. It is **never required** for direct-IP joining. It advertises only game, room label, rules version, seat count and port; receiver derives the IP from the datagram source.
+Design contract plus a tested foundation, **not yet a shipped end-user feature**. The host EXE is intended to be authoritative. The first transport uses a bounded, newline-framed JSON stream over TCP (`src/lan/chess-tcp.ts` and `chess-client.ts`). `electron/lan-controller.ts` owns those sockets in Electron main and the preload exposes narrow commands/events, gated to development builds; the renderer has no raw Node networking. A 2D diagnostic LAN Lab screen is likewise dev-only. Best-effort UDP discovery exists in `src/lan/discovery.ts` and is shown in that lab; it is **never required** for direct-IP joining. It advertises only game, room label, rules version, seat count and port; receiver derives the IP from the datagram source.
 
 ## Envelope and limits
 
@@ -13,6 +13,7 @@ The initial Chess transport sends one JSON object per line. `hello` carries `pro
 | Tested standalone | Host → guest | `hello.accept` / `hello.reject` | seat token + safe view, or stable rejection |
 | Tested standalone | Both | `ping` / `pong` | keepalive; RTT display later |
 | Tested standalone | Guest → host | `game.intent`, `game.snapshot.request` | request ID, base revision and move; no client actor |
+| Tested standalone | Guest → host | `room.leave` | explicit departure frees the guest seat immediately |
 | Tested standalone | Host → guest | `game.result`, `game.snapshot`, `room.closed` | result/revision, Chess projection, host shutdown |
 | Planned | Both | `room.ready`, `room.chat`, `room.emote`, `game.resign`, `game.draw`, `game.rematch` | lobby and social/game decisions |
 | Planned | Host → guest | `game.rulesheet` | versioned Fusion rules/hash before start |
@@ -26,7 +27,7 @@ Host binds each socket to a seat after `hello`; rejects a guest-supplied `actor`
 
 ## Reconnect and host loss
 
-Host issues an unpredictable room-scoped seat token after a successful handshake, rotates it on successful rejoin and reserves the seat ~90 s after disconnect. Current standalone Chess pauses during grace and, after explicit `expireSeats`, returns the seat to a bot without silently making a move. The server currently keeps the live token in memory; hashed storage, expiry scheduling, optional forfeit policy and lobby choice are release hardening tasks. A rejoining guest receives current Chess projection and revision; clocks and peer poses are not implemented. Host departure closes connections; there is no automatic migration or cloud recovery. Because the first TCP transport is plaintext, use only on trusted physical/virtual LANs until encryption or stronger pairing is implemented.
+Host issues an unpredictable room-scoped seat token after a successful handshake, rotates it on successful rejoin and reserves the seat ~90 s after an unexpected disconnect. Deliberate `room.leave` frees the guest seat immediately. Chess pauses during grace; the TCP host schedules expiry and returns the seat to a bot without silently making a move. The development UI then asks the bot to act when its turn arrives. A new guest can replace an unoccupied bot at any committed turn boundary while the game is playing. The server currently keeps the live token in memory; hashed storage, optional forfeit policy and lobby choice are release hardening tasks. A rejoining guest receives current Chess projection and revision; clocks and peer poses are not implemented. Host departure closes connections; there is no automatic migration or cloud recovery. Because the first TCP transport is plaintext, use only on trusted physical/virtual LANs until encryption or stronger pairing is implemented.
 
 ## Visibility
 

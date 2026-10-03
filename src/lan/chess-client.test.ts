@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { Socket } from 'node:net';
 import { ChessLanTcpServer } from './chess-tcp';
 import { ChessLanTcpClient } from './chess-client';
 
@@ -24,7 +25,8 @@ describe('direct-IP Chess LAN client', () => {
     await vi.waitFor(() => expect(updates).toEqual([1]));
     expect(await client.move({ requestId: 'guest-1', baseRevision: 1, from: 52, to: 36 })).toMatchObject({ ok: true, revision: 2 });
     await vi.waitFor(() => expect(client.view.revision).toBe(2));
-    client.close();
+    // Simulate a dropped connection, not the explicit leave protocol.
+    (client as unknown as { socket: Socket }).socket.destroy();
     await vi.waitFor(() => expect(server.session.view().guest).toBe('disconnected'));
     const resumed = await ChessLanTcpClient.connectDirect({ ...endpoint, rejoinToken: token });
     clients.push(resumed);

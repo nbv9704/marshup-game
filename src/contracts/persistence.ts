@@ -1,4 +1,6 @@
 import type { BotDifficulty, JsonObject, Locale } from './types.js';
+import type { ChessLanIntent, ChessLanResult, ChessLanView } from '../lan/chess-session.js';
+import type { DiscoveredLanRoom } from '../lan/discovery.js';
 export interface Profile {
   readonly id: string;
   readonly avatarId: string;
@@ -54,4 +56,23 @@ export interface DesktopBridge {
   exportRecipe(code: string): Promise<string | null>;
   importRecipe(): Promise<string | null>;
   getAppVersion(): Promise<string>;
+  /** Development-only until the complete 3D Chess LAN vertical slice is ready. */
+  lanListAdapters(): Promise<readonly { name:string; address:string; netmask:string; broadcast:string }[]>;
+  lanStartHost(input:{adapterAddress:string;port:number;roomName:string}): Promise<{address:string;port:number;roomEpoch:string;discoveryAvailable:boolean}>;
+  lanHostView(): Promise<ChessLanView|null>;
+  lanHostMove(intent:ChessLanIntent): Promise<ChessLanResult>;
+  lanHostBotTurn(difficulty:BotDifficulty): Promise<ChessLanResult>;
+  lanStopHost(): Promise<void>;
+  lanStartBrowsing(): Promise<void>;
+  lanDiscoveredRooms(): Promise<readonly DiscoveredLanRoom[]>;
+  lanStopBrowsing(): Promise<void>;
+  lanJoinDirect(input:{address:string;port:number}): Promise<ChessLanView>;
+  lanRejoin(): Promise<ChessLanView>;
+  lanGuestView(): Promise<ChessLanView|null>;
+  lanGuestMove(intent:ChessLanIntent): Promise<ChessLanResult>;
+  lanRequestGuestSnapshot(): Promise<void>;
+  lanLeaveGuest(): Promise<void>;
+  onLanHostView(listener:(view:ChessLanView)=>void):()=>void;
+  onLanGuestView(listener:(view:ChessLanView)=>void):()=>void;
+  onLanGuestClosed(listener:(message:string)=>void):()=>void;
 }

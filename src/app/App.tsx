@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { GAME_CATALOG, type CatalogDesignEntry } from '../catalog/gameCatalog';
 import type { SaveDocument, Settings } from '../contracts/persistence';
 import type { Locale } from '../contracts/types';
@@ -13,7 +13,9 @@ import { MASCOTS, MascotAvatar, PartyLogo, PartyProgress } from './PartyUi';
 import { StyleGuide } from './StyleGuide';
 import '../styles/main.css';
 import '../styles/party.css';
-type Page = 'home'|'library'|'trainer'|'game'|'profile'|'settings'|'styleGuide';
+const LanChessDevScreen = import.meta.env.DEV
+  ? lazy(async () => ({ default: (await import('./LanChessDevScreen')).LanChessDevScreen })) : null;
+type Page = 'home'|'library'|'trainer'|'game'|'profile'|'settings'|'styleGuide'|'lanDev';
 type Category = 'all'|'board'|'card'|'casino'|'favorites';
 const ICONS:Record<string,string>={chess:'♚',xiangqi:'帥',go:'◉',gomoku:'✣',ludo:'♟',property:'◆',
   checkers:'◈',othello:'◑',backgammon:'⚄',snakes:'↝',connect4:'●',tictactoe:'✕',mancala:'◐',dominoes:'▦',
@@ -98,7 +100,7 @@ export default function App(){
     </aside>
     <div className="shell"><header className="app-topbar">
       <button className="mobile-brand" onClick={()=>go('home')}>✦ MASHUP ARENA</button>
-      <div className="breadcrumb"><PartyLogo compact/><span className="breadcrumb-divider">/</span>{t(page)}</div>
+      <div className="breadcrumb"><PartyLogo compact/><span className="breadcrumb-divider">/</span>{page==='lanDev'?'LAN LAB':t(page)}</div>
       <div className="topbar-actions"><div className="connection"><span className="status-light"/> LOCAL SYSTEM</div>
         <span className="chips-pill" title={t('chips')}>◈ {doc.profile.virtualChips.toLocaleString()}</span>
         <button className="profile-pill" onClick={()=>go('profile')} title={t('profile')}><span><MascotAvatar id={avatar} size={34}/></span><b>{doc.profile.displayName}</b>
@@ -147,8 +149,9 @@ export default function App(){
     {page==='profile' && <ProfileView doc={doc} update={update} t={t} avatar={avatar} />}
     {page==='settings' && <SettingsView doc={doc} update={update} replace={replace} t={t} />}
     {import.meta.env.DEV&&page==='styleGuide'&&<StyleGuide locale={locale} onBack={()=>go('home')}/>}
+    {LanChessDevScreen&&page==='lanDev'&&<Suspense fallback={<main className="page"><p>Đang tải LAN Lab…</p></main>}><LanChessDevScreen onBack={()=>go('home')}/></Suspense>}
     <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.2.0</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
-      <span>{t('entertainment')}</span>{import.meta.env.DEV&&<button className="style-guide-link" onClick={()=>go('styleGuide')}>STYLE GUIDE ↗</button>}</footer>
+      <span>{t('entertainment')}</span>{import.meta.env.DEV&&<><button className="style-guide-link" onClick={()=>go('styleGuide')}>STYLE GUIDE ↗</button><button className="style-guide-link" onClick={()=>go('lanDev')}>LAN LAB ↗</button></>}</footer>
     </div>
     {selected && <div className="modal-backdrop" onClick={()=>setSelected(null)}>
       <section role="dialog" aria-modal="true" aria-label={selected.name} className="modal panel game-detail" onClick={e=>e.stopPropagation()}>

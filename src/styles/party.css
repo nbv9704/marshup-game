@@ -87,6 +87,18 @@ body { min-width:320px; background:#8b1832; }
 .counter-badge { color:#663748;background:linear-gradient(#fff6b2,#ffd153); }
 .shell-footer { border-top:4px solid #ffd39d;background:#a72544;color:#ffe4ca; }.shell-footer b { color:#b6ff69; }
 .style-guide-link { border:0;background:none;color:#fff7a5;font-size:inherit;font-weight:900;letter-spacing:inherit;text-decoration:underline; }
+.lan-lab-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start; }
+.lan-lab-panel { display:flex;flex-direction:column;gap:13px;padding:24px; }
+.lan-lab-panel p { line-height:1.5;color:#ffeddf; }
+.lan-lab-panel label { display:flex;flex-direction:column;gap:7px;font-weight:800; }
+.lan-lab-panel input,.lan-lab-panel select { width:100%;padding:12px;border:3px solid #fff2d3;border-radius:15px;background:#fff9e9;color:#61394d;font:inherit; }
+.lan-room-list { display:flex;flex-direction:column;gap:9px;max-height:230px;overflow:auto; }
+.lan-room-list .button { text-align:left;white-space:normal; }
+.lan-lab-status { display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:22px;padding:15px 22px; }
+.lan-lab-game { display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:23px;align-items:start; }
+.lan-lab-game>section { padding:24px;display:grid;justify-items:center;gap:18px; }
+.lan-lab-game .party-chess-board { width:min(100%,560px); }
+@media(max-width:950px) { .lan-lab-grid,.lan-lab-game { grid-template-columns:1fr; } }
 
 .profile-banner,.editor,.settings-panel,.stat { color:white; }.avatar-large { width:130px;height:130px;background:linear-gradient(#fff5c8,#ffcf75);border:5px solid white;border-radius:32px;box-shadow:0 8px 0 #b87945; }.profile-banner p,.stat small,.editor label,.setting-label,.switch-row,.range-row { color:#fff2df; }.stat strong { text-shadow:0 4px 0 #7b2d4f; }
 .avatar-picker button { width:68px;height:68px;border:3px solid #fff0d2;border-radius:19px;background:linear-gradient(#69ddef,#348bc9);box-shadow:0 5px 0 #2c6b9d; }.avatar-picker button.selected { background:linear-gradient(#fff39d,#ffbd45);border-color:white;transform:translateY(-3px); }

@@ -5,7 +5,7 @@ const intent = (requestId: string, baseRevision: number, from: number, to: numbe
   ({ requestId, baseRevision, from, to });
 
 describe('host-authoritative Chess LAN session core', () => {
-  it('keeps solo bot seat by default and accepts only matching ruleset before play', () => {
+  it('keeps solo bot seat by default and accepts only matching ruleset', () => {
     const host = new ChessLanHostSession();
     expect(host.view().guest).toBe('bot');
     expect(host.view().state).not.toHaveProperty('positionCounts');
@@ -63,12 +63,34 @@ describe('host-authoritative Chess LAN session core', () => {
     expect(host.view().guest).toBe('bot');
   });
 
+  it('frees a deliberately vacated seat without waiting for reconnect grace', () => {
+    const host = new ChessLanHostSession();
+    const guest = host.join('1.0.0');
+    if (!guest.ok) throw new Error('join failed');
+    expect(host.leave('forged')).toBe(false);
+    expect(host.leave(guest.token)).toBe(true);
+    expect(host.view().guest).toBe('bot');
+    expect(host.join('1.0.0')).toMatchObject({ ok: true, view: { guest: 'connected' } });
+  });
+
   it('lets a local bot fill an empty seat without exposing bot control to guests', () => {
     const host = new ChessLanHostSession();
     expect(host.botTurn()).toMatchObject({ ok: false, error: 'game.not-your-turn' });
     expect(host.submit(host.hostToken, intent('white', 0, 12, 28))).toMatchObject({ ok: true, revision: 1 });
     expect(host.botTurn('easy')).toMatchObject({ ok: true, revision: 2 });
     expect(host.view().state.activePlayer).toBe('p1');
+  });
+
+  it('allows a friend to take the bot seat at a committed turn boundary', () => {
+    const host = new ChessLanHostSession();
+    expect(host.submit(host.hostToken, intent('solo-white', 0, 12, 28))).toMatchObject({ ok: true, revision: 1 });
+    expect(host.botTurn('easy')).toMatchObject({ ok: true, revision: 2 });
+    const guest = host.join('1.0.0');
+    expect(guest).toMatchObject({ ok: true, view: { revision: 2, guest: 'connected' } });
+    if (!guest.ok) throw new Error('join failed');
+    expect(host.submit(host.hostToken, intent('friend-white', 2, 11, 27))).toMatchObject({ ok: true, revision: 3 });
+    expect(host.botTurn()).toMatchObject({ ok: false, error: 'game.not-your-turn' });
+    expect(host.view().state.activePlayer).toBe('p2');
   });
 
   it('rejects all actions after host closes the room', () => {

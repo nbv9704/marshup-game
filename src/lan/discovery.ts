@@ -79,6 +79,7 @@ export function localLanAdapters(): readonly { name: string; address: string; ne
 export class LanRoomAdvertiser {
   private socket: UdpSocket | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private bytes: Buffer | null = null;
   async start(adapterAddress: string, room: Omit<LanRoomAdvertisement,
     'magic' | 'protocolMajor' | 'gameId' | 'rulesetVersion' | 'maxSeats'>,
   discoveryPort = LAN_DISCOVERY_PORT): Promise<void> {
@@ -96,17 +97,27 @@ export class LanRoomAdvertiser {
       socket.setBroadcast(true);
       socket.on('error', () => this.stop());
       this.socket = socket;
-      const advertise = () => socket.send(bytes, discoveryPort, adapter.broadcast, () => undefined);
+      this.bytes = bytes;
+      const advertise = () => {
+        if (this.bytes && this.socket === socket) socket.send(this.bytes, discoveryPort, adapter.broadcast, () => undefined);
+      };
       advertise();
       this.timer = setInterval(advertise, ADVERTISE_MS);
       this.timer.unref();
     } catch (cause) { socket.close(); throw cause; }
   }
+  update(room: Omit<LanRoomAdvertisement,
+    'magic' | 'protocolMajor' | 'gameId' | 'rulesetVersion' | 'maxSeats'>): void {
+    if (!this.socket) throw new Error('Not advertising');
+    this.bytes = encodeLanAdvertisement(room);
+  }
   stop(): void {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
-    this.socket?.close();
+    const socket = this.socket;
     this.socket = null;
+    this.bytes = null;
+    try { socket?.close(); } catch { /* Already closed by the network stack. */ }
   }
 }
 
@@ -140,8 +151,9 @@ export class LanRoomBrowser {
     return [...this.rooms.values()].sort((a, b) => b.lastSeen - a.lastSeen);
   }
   stop(): void {
-    this.socket?.close();
+    const socket = this.socket;
     this.socket = null;
     this.rooms.clear();
+    try { socket?.close(); } catch { /* Already closed by the network stack. */ }
   }
 }

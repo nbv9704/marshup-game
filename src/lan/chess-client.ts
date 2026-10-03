@@ -45,7 +45,7 @@ export interface ChessLanConnectOptions {
   readonly rejoinToken?: string;
 }
 
-/** Node-side direct-IP guest transport. A future Electron preload will expose narrow methods, not this socket. */
+/** Node-side direct-IP guest transport; Electron main exposes only narrow preload methods. */
 export class ChessLanTcpClient {
   private buffer = Buffer.alloc(0);
   private readonly pending = new Map<string, { resolve: (result: ChessLanResult) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
@@ -118,8 +118,9 @@ export class ChessLanTcpClient {
   }
 
   close(): void {
-    this.socket.end();
-    this.fail(new Error('LAN connection closed by client'));
+    if (this.closed) return;
+    this.socket.end('{"type":"room.leave"}\n');
+    this.fail(new Error('LAN connection closed by client'), false);
   }
 
   private read(chunk: Buffer): void {
@@ -188,12 +189,12 @@ export class ChessLanTcpClient {
     }
   }
 
-  private fail(error: Error): void {
+  private fail(error: Error, destroySocket = true): void {
     if (this.closed) return;
     this.closed = true;
     if (this.heartbeat) clearInterval(this.heartbeat);
     this.heartbeat = null;
-    this.socket.destroy();
+    if (destroySocket) this.socket.destroy();
     this.handshake?.reject(error);
     this.handshake = null;
     for (const request of this.pending.values()) { clearTimeout(request.timer); request.reject(error); }

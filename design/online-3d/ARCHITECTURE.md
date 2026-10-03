@@ -28,7 +28,7 @@ No cloud backend or public identity service exists in the initial architecture. 
 | Menu/HUD and 3D room | Each EXE | Cosmetic only; never determines outcomes |
 | Fusion recipe and result | Host session | Versioned shared rule sheet before start; cache local to host |
 
-The current `src/contracts` and game plugins are the migration baseline. A proposed workspaces split (`apps/client`, `packages/rules`, `packages/lan-protocol`, `packages/3d`) is deferred until its value exceeds migration risk. First isolate pure host-session/protocol code *without moving all seven working plugins*. Existing 2D UI remains as a fallback while each 3D view reaches feature parity. Assets are lazy-loaded per room.
+The current `src/contracts` and game plugins are the migration baseline. A proposed workspaces split (`apps/client`, `packages/rules`, `packages/lan-protocol`, `packages/3d`) is deferred until its value exceeds migration risk. The first pure Chess host-session/protocol code is now isolated in `src/lan`, and Electron main owns the network sockets through `electron/lan-controller.ts`; all LAN IPC and the 2D diagnostic LAN Lab are development-gated until 3D gameplay UI, security and two-machine tests are ready. Existing 2D UI remains a fallback while each 3D view reaches feature parity. Assets are lazy-loaded per room.
 
 ## Lifecycle and policies
 

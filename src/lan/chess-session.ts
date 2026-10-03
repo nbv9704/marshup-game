@@ -47,11 +47,11 @@ export class ChessLanHostSession {
   private state: ChessState = newChessState();
   private readonly dedup = new Map<string, { fingerprint: string; result: ChessLanResult }>();
 
-  /** Chess v1 only allows taking the bot seat before its first move. */
+  /** Each committed Chess move is a safe boundary for replacing the bot seat. */
   join(rulesetVersion: string): { ok: true; token: string; view: ChessLanView } | { ok: false; error: ChessLanError } {
     if (this.closed) return { ok: false, error: 'room.closed' };
     if (rulesetVersion !== descriptor.rulesetVersion) return { ok: false, error: 'version.unsupported' };
-    if (this.guestToken || this.state.revision !== 0) return { ok: false, error: 'seat.unavailable' };
+    if (this.guestToken || this.state.phase !== 'playing') return { ok: false, error: 'seat.unavailable' };
     this.guestToken = crypto.randomUUID();
     this.guestConnected = true;
     return { ok: true, token: this.guestToken, view: this.view() };
@@ -103,6 +103,15 @@ export class ChessLanHostSession {
     if (this.closed || token !== this.guestToken || !this.guestConnected || !Number.isFinite(now)) return false;
     this.guestConnected = false;
     this.guestDeadline = now + CHESS_LAN_GRACE_MS;
+    return true;
+  }
+
+  /** A deliberate leave frees the seat immediately; an unexpected drop keeps its grace period. */
+  leave(token: string): boolean {
+    if (this.closed || token !== this.guestToken) return false;
+    this.guestToken = null;
+    this.guestConnected = false;
+    this.guestDeadline = null;
     return true;
   }
 

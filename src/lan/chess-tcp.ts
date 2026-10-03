@@ -42,6 +42,12 @@ export class ChessLanTcpServer {
   private server: Server | null = null;
   private guestSocket: Socket | null = null;
   private listening = false;
+  private readonly viewListeners = new Set<(view: ChessLanView) => void>();
+
+  onView(listener: (view: ChessLanView) => void): () => void {
+    this.viewListeners.add(listener);
+    return () => this.viewListeners.delete(listener);
+  }
 
   async listen(bindAddress: string, port: number): Promise<{ address: string; port: number }> {
     if (this.server) throw new Error('LAN listener already started');
@@ -83,9 +89,11 @@ export class ChessLanTcpServer {
     return result;
   }
 
-  /** Called by the host lifecycle; a UI timer will also call this at grace expiry. */
+  /** Called by the disconnect timer or host lifecycle at grace expiry. */
   expireSeats(now = Date.now()): boolean {
-    return this.session.expire(now);
+    const expired = this.session.expire(now);
+    if (expired) this.emitView();
+    return expired;
   }
 
   async close(): Promise<void> {
@@ -103,7 +111,15 @@ export class ChessLanTcpServer {
   }
 
   private broadcastSnapshot(): void {
-    if (this.guestSocket) send(this.guestSocket, { type: 'game.snapshot', view: this.session.view() });
+    const view = this.session.view();
+    if (this.guestSocket) send(this.guestSocket, { type: 'game.snapshot', view });
+    this.emitView(view);
+  }
+
+  private emitView(view = this.session.view()): void {
+    for (const listener of this.viewListeners) {
+      try { listener(view); } catch { /* UI observers cannot disrupt host rules. */ }
+    }
   }
 
   private accept(socket: Socket): void {
@@ -145,6 +161,7 @@ export class ChessLanTcpServer {
           this.guestSocket = socket;
           clearTimeout(handshakeTimer);
           send(socket, { type: 'hello.accept', protocolMajor: PROTOCOL_MAJOR, token, view: joined.view });
+          this.emitView(joined.view);
         } else if (message.type === 'game.intent') {
           if (!onlyKeys(message, ['type', 'intent']) || !record(message.intent) ||
             !onlyKeys(message.intent, ['requestId', 'baseRevision', 'from', 'to', 'promotion'])) {
@@ -159,6 +176,13 @@ export class ChessLanTcpServer {
           if (result.ok && result.revision > before) this.broadcastSnapshot();
         } else if (message.type === 'game.snapshot.request' && onlyKeys(message, ['type'])) {
           send(socket, { type: 'game.snapshot', view: this.session.view() });
+        } else if (message.type === 'room.leave' && onlyKeys(message, ['type'])) {
+          if (this.session.leave(token)) {
+            this.guestSocket = null;
+            this.emitView();
+          }
+          socket.end();
+          return;
         } else if (message.type === 'ping' && onlyKeys(message, ['type'])) {
           send(socket, { type: 'pong' });
         } else {
@@ -171,7 +195,8 @@ export class ChessLanTcpServer {
       clearTimeout(handshakeTimer);
       if (this.guestSocket === socket) this.guestSocket = null;
       if (token && this.session.disconnect(token)) {
-        const expiry = setTimeout(() => this.session.expire(), CHESS_LAN_GRACE_MS + 1);
+        this.emitView();
+        const expiry = setTimeout(() => this.expireSeats(), CHESS_LAN_GRACE_MS + 1);
         expiry.unref();
       }
     });
