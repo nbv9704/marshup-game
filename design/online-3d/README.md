@@ -18,7 +18,7 @@ Open [prototype.html](prototype.html) locally. It demonstrates local-profile ent
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md), [PROTOCOL.md](PROTOCOL.md), [SECURITY.md](SECURITY.md), [VISUAL_DESIGN.md](VISUAL_DESIGN.md), and [ESTIMATE.md](ESTIMATE.md) for implementation boundaries and phase gates.
 
-The current Chess 3D beta outputs are `release/MashupArena-Setup-0.3.0-beta.1.exe` and `release/MashupArena-0.3.0-beta.1-portable.exe`. The older `0.2.0` executables, if still present, contain only the 2D offline app. Installer and portable are alternatives, not files to install together. Each is roughly 84 MB largely because Electron packages its Chromium runtime. These local builds are unsigned; a Windows machine without symlink privilege omits executable icon/metadata editing, as documented in the root README.
+The current Chess 3D beta outputs are `release/MashupArena-Setup-0.3.0-beta.2.exe` and `release/MashupArena-0.3.0-beta.2-portable.exe`. The setup detects and upgrades older NSIS installations at their existing path; portable copies have no install registration and are not updated this way. The older `0.2.0` executables, if still present, contain only the 2D offline app. Installer and portable are alternatives, not files to install together. Each is roughly 84 MB largely because Electron packages its Chromium runtime. These local builds are unsigned; a Windows machine without symlink privilege omits executable icon/metadata editing, as documented in the root README.
 
 ## Revised phase gates
 

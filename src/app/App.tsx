@@ -157,7 +157,7 @@ export default function App(){
     {page==='settings' && <SettingsView doc={doc} update={update} replace={replace} t={t} />}
     {import.meta.env.DEV&&page==='styleGuide'&&<StyleGuide locale={locale} onBack={()=>go('home')}/>}
     {LanChessDevScreen&&page==='lanDev'&&<Suspense fallback={<main className="page"><p>Đang tải LAN Lab…</p></main>}><LanChessDevScreen onBack={()=>go('home')}/></Suspense>}
-    <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.3.0 BETA</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
+    <footer className="shell-footer"><span>© MASHUP ARENA / BUILD 0.3.0 BETA.2</span><span>{busy?t('saving'):message?t('error'):t('saved')} <b>●</b></span>
       <span>{t('entertainment')}</span>{import.meta.env.DEV&&<><button className="style-guide-link" onClick={()=>go('styleGuide')}>STYLE GUIDE ↗</button><button className="style-guide-link" onClick={()=>go('lanDev')}>LAN LAB ↗</button></>}</footer>
     </div>
     {selected && <div className="modal-backdrop" onClick={()=>setSelected(null)}>

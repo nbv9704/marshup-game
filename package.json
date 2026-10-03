@@ -1,7 +1,7 @@
 {
   "name": "mashup-arena",
   "private": true,
-  "version": "0.3.0-beta.1",
+  "version": "0.3.0-beta.2",
   "description": "Offline Windows desktop arcade shell and deterministic practice game",
   "author": "Mashup Arena",
   "license": "UNLICENSED",
@@ -17,8 +17,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p electron/tsconfig.json",
     "build:electron": "node scripts/build-electron.mjs",
     "build": "npm run typecheck && vite build && node scripts/check-release-bundle.mjs && npm run build:electron",
-    "dist": "npm test && npm run build && node scripts/package-windows.mjs",
-    "test:core-offline": "node scripts/test-core-offline.mjs"
+    "dist": "npm test && npm run build && node scripts/package-windows.mjs && npm run test:installer-version",
+    "test:core-offline": "node scripts/test-core-offline.mjs",
+    "test:installer-version": "node scripts/test-installer-version.mjs"
   },
   "devDependencies": {
     "@fontsource/fredoka": "^5.2.7",
@@ -79,6 +80,8 @@
     },
     "nsis": {
       "artifactName": "MashupArena-Setup-${version}.${ext}",
+      "guid": "03fdc028-aca6-59c4-8834-701d0421d91d",
+      "include": "build/installer.nsh",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,

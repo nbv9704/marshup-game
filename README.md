@@ -35,12 +35,12 @@ On Windows without symlink permission, the packaging script automatically skips 
 Expected beta outputs after `npm run dist`:
 
 ```text
-release/MashupArena-Setup-0.3.0-beta.1.exe
-release/MashupArena-0.3.0-beta.1-portable.exe
+release/MashupArena-Setup-0.3.0-beta.2.exe
+release/MashupArena-0.3.0-beta.2-portable.exe
 release/win-unpacked/Mashup Arena.exe
 ```
 
-The setup executable installs per user and can create a desktop shortcut. The portable executable extracts its application payload to a temporary folder when launched. Builds are unsigned unless an Authenticode certificate is configured, so Windows SmartScreen may show a warning.
+The setup executable detects an older NSIS installation by its pinned app GUID, uninstall entry, version and existing executable. It keeps the previous per-user/per-machine mode and installation folder, asks once, then upgrades in place without showing the first-install wizard again. The old uninstaller is called with app-data preservation; matching/newer versions are not overwritten. A fresh install still shows the normal setup choices. Portable copies do not register an installation and cannot be detected for this update flow. Builds are unsigned unless an Authenticode certificate is configured, so Windows SmartScreen may show a warning.
 
 To build through GitHub, open **Actions → Mashup Arena Windows x64 → Run workflow**. After the green run, download and unzip the `MashupArena-Windows-x64` artifact. Do not call this beta LAN-certified until two real machines have completed the test matrix in `design/online-3d/PROTOCOL.md`.
 
