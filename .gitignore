@@ -6,3 +6,12 @@ release/
 .DS_Store
 coverage/
 .core-test-build/
+# Unity-generated caches and local editor state (UnityProject is the source project).
+UnityProject/[Ll]ibrary/
+UnityProject/[Tt]emp/
+UnityProject/[Oo]bj/
+UnityProject/[Bb]uild/
+UnityProject/[Bb]uilds/
+UnityProject/[Ll]ogs/
+UnityProject/[Uu]ser[Ss]ettings/
+UnityProject/[Mm]emoryCaptures/

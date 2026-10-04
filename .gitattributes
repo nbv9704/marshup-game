@@ -1,0 +1,3 @@
+# Unity serializes blank YAML values with a trailing space; leave generated
+# assets byte-for-byte as the Editor writes them.
+UnityProject/** whitespace=-blank-at-eol
