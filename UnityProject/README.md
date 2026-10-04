@@ -34,6 +34,13 @@ Open this directory in Unity Hub using the Editor version from
 installed at `D:\Unity\Editor\6000.6.4f1\Editor\Unity.exe`. The Unity CLI is
 at `D:\Unity\Unity Hub\resources\unity.exe`; neither needs to be on `PATH`.
 
+The Home objects are authored in `Assets/Scenes/SampleScene.unity` and are
+visible in the **Scene** tab without pressing Play. If Unity was already open
+while the scene file changed, double-click `SampleScene` in the Project panel
+to reload it. Select `Mashup Arena` in Hierarchy and press **F** to frame the
+scene. Press **Play**, then choose the **Game** tab to test the buttons and
+navigation; Play mode rebuilds Home with the saved local profile.
+
 Commit `Assets`, `Packages`, and `ProjectSettings`, including `.meta` files.
 Generated `Library`, `Temp`, `Logs`, `Builds`, and `UserSettings` stay ignored.
 

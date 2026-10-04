@@ -76,6 +76,10 @@ namespace MashupArena
 
         private void Awake()
         {
+            // The authored Home is visible in the Editor. Runtime rebuilds it
+            // with the saved local profile so the preview is never duplicated.
+            var authoredHome = transform.Find("3D screen: Home");
+            if (authoredHome != null) screenRoot = authoredHome.gameObject;
             profile = LoadProfile();
             editingName = profile.displayName;
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -88,6 +92,15 @@ namespace MashupArena
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
+
+#if UNITY_EDITOR
+        public void GenerateEditorHome()
+        {
+            profile = new LocalProfile();
+            editingName = profile.displayName;
+            BuildScreen(ScreenId.Home);
+        }
+#endif
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
