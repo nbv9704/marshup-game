@@ -30,14 +30,18 @@ namespace MashupArena
         }
     }
 
+    public sealed class ChessSquareTarget : MonoBehaviour
+    {
+        public int square;
+    }
+
     /// <summary>
-    /// The first Unity vertical slice: a real 3D home, local avatar/profile,
-    /// walkable hub and Chess room preview. No game is represented as playable
-    /// until its rule adapter has been ported and tested.
+    /// Unity vertical slice: 3D home, local avatar/profile, walkable hub and
+    /// a Chess-vs-bot room backed by rules independent of this visual layer.
     /// </summary>
     public sealed class ArenaApp : MonoBehaviour
     {
-        private enum ScreenId { Home, Customization, Hub, Settings, ChessPreview }
+        private enum ScreenId { Home, Customization, Hub, Settings, ChessRoom }
 
         private static readonly Color[] AvatarColors =
         {
@@ -62,8 +66,17 @@ namespace MashupArena
         private int keyboardSelection;
         private float lookYaw;
         private Vector3 hubSpawn = new Vector3(0f, 1.7f, 9f);
+        private ChessPosition chess;
+        private readonly Renderer[] chessSquares = new Renderer[64];
+        private int selectedChessSquare = -1;
+        private List<ChessMove> promotionChoices;
+        private ChessMove? lastChessMove;
+        private bool chessFocus = true;
+        private bool botThinking;
+        private bool smokeMode;
 
         private string ProfilePath => Path.Combine(Application.persistentDataPath, "profile.json");
+        private string ChessPath => Path.Combine(Application.persistentDataPath, "chess.json");
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void StartApp()
@@ -80,11 +93,13 @@ namespace MashupArena
             // with the saved local profile so the preview is never duplicated.
             var authoredHome = transform.Find("3D screen: Home");
             if (authoredHome != null) screenRoot = authoredHome.gameObject;
+            smokeMode = Array.IndexOf(Environment.GetCommandLineArgs(), "--smoke-test") >= 0;
             profile = LoadProfile();
+            chess = smokeMode ? null : LoadChess();
             editingName = profile.displayName;
             SceneManager.sceneLoaded += OnSceneLoaded;
             BuildScreen(ScreenId.Home);
-            if (Array.IndexOf(Environment.GetCommandLineArgs(), "--smoke-test") >= 0)
+            if (smokeMode)
                 StartCoroutine(SmokeTest());
         }
 
@@ -146,6 +161,37 @@ namespace MashupArena
             }
         }
 
+        private ChessPosition LoadChess()
+        {
+            try
+            {
+                if (File.Exists(ChessPath))
+                    return ChessRules.Restore(JsonUtility.FromJson<ChessSnapshot>(File.ReadAllText(ChessPath)));
+            }
+            catch (Exception error)
+            {
+                Debug.LogWarning("Could not restore Chess session; original save retained: " + error.Message);
+            }
+            return null;
+        }
+
+        private void SaveChess()
+        {
+            if (chess == null || smokeMode) return;
+            try
+            {
+                Directory.CreateDirectory(Application.persistentDataPath);
+                var temporary = ChessPath + ".tmp";
+                File.WriteAllText(temporary, JsonUtility.ToJson(ChessRules.Capture(chess), true));
+                if (File.Exists(ChessPath)) File.Replace(temporary, ChessPath, null);
+                else File.Move(temporary, ChessPath);
+            }
+            catch (Exception error)
+            {
+                Debug.LogError("Could not save Chess session: " + error.Message);
+            }
+        }
+
         private static string CleanName(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return "Player";
@@ -184,7 +230,7 @@ namespace MashupArena
             RenderSettings.ambientLight = new Color(0.39f, 0.45f, 0.58f);
 
             if (next == ScreenId.Hub) BuildHub();
-            else if (next == ScreenId.ChessPreview) BuildChessPreview();
+            else if (next == ScreenId.ChessRoom) BuildChessRoom();
             else BuildMenuScreen(next);
         }
 
@@ -270,31 +316,107 @@ namespace MashupArena
                 new Vector3(0f, 3.2f, -2.8f), 0.14f, Color.white, TextAnchor.MiddleCenter);
             CreateBlock("Chess portal", PrimitiveType.Cube, new Vector3(0f, 0.9f, -2.7f),
                 new Vector3(4f, 3.4f, 0.4f), new Color(0.14f, 0.45f, 0.55f));
-            CreateButton("CHESS ROOM PREVIEW", "chess-preview", new Vector3(0f, 1.15f, -2.35f), 3.3f);
+            CreateButton("CHESS VS BOT", "chess", new Vector3(0f, 1.15f, -2.35f), 3.3f);
             CreateText("Walk closer to enter", new Vector3(0f, 0.47f, -2.3f),
                 0.13f, Color.white, TextAnchor.MiddleCenter);
             CreateButton("HOME", "home", new Vector3(-4.8f, 1.1f, 0f), 1.9f);
             CreateAvatar(new Vector3(2.6f, -0.59f, 0.7f), 0.75f);
         }
 
-        private void BuildChessPreview()
+        private void BuildChessRoom()
         {
-            mainCamera.transform.position = new Vector3(0f, 4.6f, 7.6f);
+            if (chess == null) chess = ChessRules.NewGame();
+            mainCamera.transform.position = chessFocus ? new Vector3(0f, 4.6f, 7.6f) :
+                new Vector3(0f, 1.7f, 7f);
             mainCamera.transform.LookAt(new Vector3(0f, 0f, 0f));
             CreateStage();
-            CreateText("CHESS ROOM — VISUAL PREVIEW", new Vector3(0f, 3.75f, 2.2f),
-                0.20f, Color.white, TextAnchor.MiddleCenter);
-            CreateText("Rules and playable moves are being ported from the tested Chess module.",
-                new Vector3(0f, 3.3f, 2.2f), 0.11f, Color.white, TextAnchor.MiddleCenter);
+            CreateText("CHESS VS BOT", new Vector3(0f, 3.75f, 2.2f),
+                0.23f, Color.white, TextAnchor.MiddleCenter);
+            CreateText("Click your piece, then a glowing square  |  F: focus/free view",
+                new Vector3(0f, 3.3f, 2.2f), 0.12f, Color.white, TextAnchor.MiddleCenter);
             CreateBlock("Board table", PrimitiveType.Cube, new Vector3(0f, -0.36f, 0f),
                 new Vector3(5.3f, 0.25f, 5.3f), new Color(0.37f, 0.20f, 0.11f));
             for (int rank = 0; rank < 8; rank++)
                 for (int file = 0; file < 8; file++)
-                    CreateBlock("Square", PrimitiveType.Cube,
-                        new Vector3((file - 3.5f) * 0.6f, -0.17f, (rank - 3.5f) * 0.6f),
+                {
+                    var square = rank * 8 + file;
+                    var tile = CreateBlock("Square " + ChessRules.SquareName(square), PrimitiveType.Cube,
+                        ChessWorld(square) + new Vector3(0f, -0.17f, 0f),
                         new Vector3(0.60f, 0.07f, 0.60f),
                         (file + rank) % 2 == 0 ? new Color(0.85f, 0.80f, 0.64f) : new Color(0.10f, 0.42f, 0.48f));
+                    tile.AddComponent<ChessSquareTarget>().square = square;
+                    chessSquares[square] = tile.GetComponent<Renderer>();
+                    if (chess.Board[square].HasValue)
+                        CreateChessPiece(square, chess.Board[square].Value);
+                }
+            RefreshChessHighlights();
             CreateButton("BACK TO HUB", "hub", new Vector3(0f, -0.7f, 3.3f), 3.3f);
+            if (chess.Result == ChessResult.None && chess.Turn == ChessSide.Black && !botThinking)
+                StartCoroutine(BotChessMove());
+        }
+
+        private static Vector3 ChessWorld(int square)
+        {
+            return new Vector3((3.5f - square % 8) * 0.6f, 0f,
+                (3.5f - square / 8) * 0.6f);
+        }
+
+        private void CreateChessPiece(int square, ChessPiece piece)
+        {
+            var root = new GameObject(piece.Side + " " + piece.Kind + " " + ChessRules.SquareName(square));
+            root.transform.SetParent(screenRoot.transform, false);
+            root.transform.localPosition = ChessWorld(square);
+            root.AddComponent<ChessSquareTarget>().square = square;
+            var body = piece.Side == ChessSide.White ? new Color(0.98f, 0.91f, 0.73f) :
+                new Color(0.22f, 0.19f, 0.40f);
+            var baseShape = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            baseShape.name = "Piece base";
+            baseShape.transform.SetParent(root.transform, false);
+            baseShape.transform.localPosition = new Vector3(0f, 0.04f, 0f);
+            baseShape.transform.localScale = new Vector3(0.39f, 0.12f, 0.39f);
+            baseShape.GetComponent<Renderer>().material = MakeMaterial(body);
+            var crown = GameObject.CreatePrimitive(piece.Kind == ChessKind.Rook ||
+                piece.Kind == ChessKind.King ? PrimitiveType.Cube : PrimitiveType.Sphere);
+            crown.name = "Piece " + piece.Kind;
+            crown.transform.SetParent(root.transform, false);
+            crown.transform.localPosition = new Vector3(0f, 0.36f, 0f);
+            var height = piece.Kind == ChessKind.King ? 0.62f :
+                piece.Kind == ChessKind.Queen ? 0.54f :
+                piece.Kind == ChessKind.Pawn ? 0.31f : 0.45f;
+            crown.transform.localScale = new Vector3(0.28f, height, 0.28f);
+            crown.GetComponent<Renderer>().material = MakeMaterial(body);
+            if (piece.Kind != ChessKind.Pawn)
+            {
+                var initial = piece.Kind == ChessKind.Knight ? "N" :
+                    piece.Kind.ToString().Substring(0, 1);
+                var label = CreateText(initial,
+                    root.transform.position + new Vector3(0f, 0.62f, 0.05f),
+                    0.10f, piece.Side == ChessSide.White ? Color.white :
+                        new Color(0.88f, 0.68f, 1f), TextAnchor.MiddleCenter);
+                label.transform.SetParent(root.transform, true);
+            }
+        }
+
+        private void RefreshChessHighlights()
+        {
+            if (chess == null) return;
+            var destinations = new HashSet<int>();
+            if (selectedChessSquare >= 0)
+                foreach (var move in ChessRules.LegalMoves(chess))
+                    if (move.From == selectedChessSquare) destinations.Add(move.To);
+            for (var square = 0; square < 64; square++)
+            {
+                var renderer = chessSquares[square];
+                if (renderer == null) continue;
+                var baseColor = (square % 8 + square / 8) % 2 == 0 ?
+                    new Color(0.85f, 0.80f, 0.64f) : new Color(0.10f, 0.42f, 0.48f);
+                if (lastChessMove.HasValue &&
+                    (lastChessMove.Value.From == square || lastChessMove.Value.To == square))
+                    baseColor = new Color(0.63f, 0.66f, 0.24f);
+                if (destinations.Contains(square)) baseColor = new Color(0.22f, 0.86f, 0.37f);
+                if (square == selectedChessSquare) baseColor = new Color(0.98f, 0.72f, 0.17f);
+                renderer.material.color = baseColor;
+            }
         }
 
         private void CreateAvatar(Vector3 origin, float scale)
@@ -405,20 +527,30 @@ namespace MashupArena
             var mouse = Mouse.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
             {
-                if (screen != ScreenId.Home) BuildScreen(screen == ScreenId.ChessPreview ? ScreenId.Hub : ScreenId.Home);
+                if (screen != ScreenId.Home) BuildScreen(screen == ScreenId.ChessRoom ? ScreenId.Hub : ScreenId.Home);
                 return;
             }
 
             if (screen == ScreenId.Hub) MoveInHub(keyboard);
+            if (screen == ScreenId.ChessRoom && keyboard != null && keyboard.fKey.wasPressedThisFrame)
+            {
+                chessFocus = !chessFocus;
+                BuildScreen(ScreenId.ChessRoom);
+            }
+            if (screen == ScreenId.ChessRoom && !chessFocus) MoveInChessRoom(keyboard);
             if (avatar != null && !profile.reducedMotion)
                 avatar.Rotate(Vector3.up, 12f * Time.deltaTime, Space.World);
 
             ArenaAction pointerTarget = null;
+            ChessSquareTarget chessTarget = null;
             if (mouse != null && mainCamera != null)
             {
                 var ray = mainCamera.ScreenPointToRay(mouse.position.ReadValue());
                 if (Physics.Raycast(ray, out var hit, 100f))
+                {
                     pointerTarget = hit.collider.GetComponent<ArenaAction>();
+                    chessTarget = hit.collider.GetComponentInParent<ChessSquareTarget>();
+                }
             }
 
             if (keyboard != null && keyboard.tabKey.wasPressedThisFrame && actions.Count > 0)
@@ -432,7 +564,10 @@ namespace MashupArena
                 if (hovered != null) hovered.SetHighlighted(true);
             }
 
-            if (pointerTarget != null && mouse != null && mouse.leftButton.wasPressedThisFrame)
+            if (screen == ScreenId.ChessRoom && chessTarget != null && mouse != null &&
+                mouse.leftButton.wasPressedThisFrame && promotionChoices == null)
+                HandleChessClick(chessTarget.square);
+            else if (pointerTarget != null && mouse != null && mouse.leftButton.wasPressedThisFrame)
                 Activate(pointerTarget.id);
             else if (keyboard != null && keyboard.enterKey.wasPressedThisFrame && actions.Count > 0)
                 Activate(actions[keyboardSelection].id);
@@ -455,9 +590,102 @@ namespace MashupArena
             mainCamera.transform.position = target;
         }
 
+        private void MoveInChessRoom(Keyboard keyboard)
+        {
+            if (keyboard == null) return;
+            var x = (keyboard.dKey.isPressed ? 1f : 0f) - (keyboard.aKey.isPressed ? 1f : 0f);
+            var z = (keyboard.wKey.isPressed ? 1f : 0f) - (keyboard.sKey.isPressed ? 1f : 0f);
+            var motion = (mainCamera.transform.right * x + mainCamera.transform.forward * z).normalized;
+            motion.y = 0f;
+            var target = mainCamera.transform.position + motion * 3f * Time.deltaTime;
+            target.x = Mathf.Clamp(target.x, -7f, 7f);
+            target.z = Mathf.Clamp(target.z, -7f, 9f);
+            if (Mathf.Abs(target.x) < 2.9f && Mathf.Abs(target.z) < 2.9f)
+                return; // Keep the camera outside the chess table.
+            mainCamera.transform.position = target;
+        }
+
+        private void HandleChessClick(int square)
+        {
+            if (chess == null || chess.Result != ChessResult.None ||
+                chess.Turn != ChessSide.White || botThinking) return;
+            if (selectedChessSquare >= 0)
+            {
+                var choices = new List<ChessMove>();
+                foreach (var move in ChessRules.LegalMoves(chess))
+                    if (move.From == selectedChessSquare && move.To == square) choices.Add(move);
+                if (choices.Count == 1)
+                {
+                    ApplyChessMove(choices[0]);
+                    return;
+                }
+                if (choices.Count > 1)
+                {
+                    promotionChoices = choices;
+                    return;
+                }
+            }
+            var piece = chess.Board[square];
+            selectedChessSquare = piece.HasValue && piece.Value.Side == ChessSide.White ? square : -1;
+            RefreshChessHighlights();
+        }
+
+        private void ApplyChessMove(ChessMove move)
+        {
+            chess = ChessRules.ApplyMove(chess, move);
+            SaveChess();
+            lastChessMove = move;
+            selectedChessSquare = -1;
+            promotionChoices = null;
+            BuildScreen(ScreenId.ChessRoom);
+        }
+
+        private IEnumerator BotChessMove()
+        {
+            botThinking = true;
+            var expectedPosition = chess;
+            yield return new WaitForSeconds(0.55f);
+            if (screen == ScreenId.ChessRoom && ReferenceEquals(chess, expectedPosition) &&
+                chess.Result == ChessResult.None && chess.Turn == ChessSide.Black)
+            {
+                var legal = ChessRules.LegalMoves(chess);
+                if (legal.Count > 0)
+                {
+                    var best = legal[0];
+                    var bestScore = int.MinValue;
+                    foreach (var move in legal)
+                    {
+                        var captured = chess.Board[move.To];
+                        var score = captured.HasValue ? PieceValue(captured.Value.Kind) : 0;
+                        score += move.Promotion == ChessKind.Queen ? 80 : 0;
+                        score += UnityEngine.Random.Range(0, 8);
+                        if (score > bestScore) { bestScore = score; best = move; }
+                    }
+                    chess = ChessRules.ApplyMove(chess, best);
+                    SaveChess();
+                    lastChessMove = best;
+                    BuildScreen(ScreenId.ChessRoom);
+                }
+            }
+            botThinking = false;
+        }
+
+        private static int PieceValue(ChessKind kind)
+        {
+            switch (kind)
+            {
+                case ChessKind.Queen: return 90;
+                case ChessKind.Rook: return 50;
+                case ChessKind.Bishop: return 30;
+                case ChessKind.Knight: return 30;
+                case ChessKind.Pawn: return 10;
+                default: return 0;
+            }
+        }
+
         private void Activate(string id)
         {
-            if (screen == ScreenId.Hub && id == "chess-preview" &&
+            if (screen == ScreenId.Hub && id == "chess" &&
                 Vector3.Distance(mainCamera.transform.position, new Vector3(0f, 1.15f, -2.35f)) > 5.5f)
                 return;
             switch (id)
@@ -467,7 +695,10 @@ namespace MashupArena
                 case "settings": BuildScreen(ScreenId.Settings); break;
                 case "home": BuildScreen(ScreenId.Home); break;
                 case "hub": BuildScreen(ScreenId.Hub); break;
-                case "chess-preview": BuildScreen(ScreenId.ChessPreview); break;
+                case "chess": if (chess == null) chess = ChessRules.NewGame();
+                    selectedChessSquare = -1; lastChessMove = null;
+                    chessFocus = true; botThinking = false;
+                    BuildScreen(ScreenId.ChessRoom); break;
                 case "color-prev": profile.colorIndex = (profile.colorIndex + AvatarColors.Length - 1) % AvatarColors.Length;
                     BuildScreen(ScreenId.Customization); break;
                 case "color-next": profile.colorIndex = (profile.colorIndex + 1) % AvatarColors.Length;
@@ -482,6 +713,11 @@ namespace MashupArena
 
         private void OnGUI()
         {
+            if (screen == ScreenId.ChessRoom)
+            {
+                DrawChessHud();
+                return;
+            }
             if (screen != ScreenId.Customization) return;
             const int width = 380;
             GUILayout.BeginArea(new Rect(18, 18, width, 110), GUI.skin.box);
@@ -491,12 +727,59 @@ namespace MashupArena
             GUILayout.EndArea();
         }
 
+        private void DrawChessHud()
+        {
+            if (chess == null) return;
+            GUILayout.BeginArea(new Rect(16, 16, 320, 135), GUI.skin.box);
+            var status = chess.Result == ChessResult.None ?
+                (chess.Turn == ChessSide.White ? "YOUR TURN - WHITE" : "BOT THINKING - BLACK") :
+                chess.Result == ChessResult.Draw ? "DRAW" :
+                chess.Result == ChessResult.WhiteWin ? "VICTORY" : "DEFEAT";
+            GUILayout.Label(status + (chess.InCheck ? "  |  CHECK" : ""));
+            GUILayout.Label("Move " + chess.FullmoveNumber + "  |  " +
+                (lastChessMove.HasValue ? "Last: " + lastChessMove.Value : "Select a white piece"));
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(chessFocus ? "Free view (F)" : "Focus board (F)"))
+            { chessFocus = !chessFocus; BuildScreen(ScreenId.ChessRoom); }
+            if (GUILayout.Button("New game"))
+            { chess = ChessRules.NewGame(); lastChessMove = null; selectedChessSquare = -1;
+              promotionChoices = null; botThinking = false; SaveChess();
+              BuildScreen(ScreenId.ChessRoom); }
+            GUILayout.EndHorizontal();
+            if (GUILayout.Button("Back to hub")) BuildScreen(ScreenId.Hub);
+            GUILayout.EndArea();
+
+            if (promotionChoices != null && promotionChoices.Count > 0)
+            {
+                var width = 360f;
+                GUILayout.BeginArea(new Rect((Screen.width - width) / 2f, Screen.height / 2f - 65f,
+                    width, 130f), GUI.skin.window);
+                GUILayout.Label("CHOOSE PROMOTION");
+                GUILayout.BeginHorizontal();
+                foreach (var choice in promotionChoices)
+                    if (GUILayout.Button(choice.Promotion.ToString()))
+                    { ApplyChessMove(choice); break; }
+                GUILayout.EndHorizontal();
+                GUILayout.EndArea();
+            }
+            else if (chess.Result != ChessResult.None)
+            {
+                GUILayout.BeginArea(new Rect(Screen.width / 2f - 180f,
+                    Screen.height / 2f - 45f, 360f, 90f), GUI.skin.window);
+                GUILayout.Label(status + " - " + chess.ResultReason);
+                if (GUILayout.Button("Play again"))
+                { chess = ChessRules.NewGame(); lastChessMove = null;
+                  selectedChessSquare = -1; SaveChess(); BuildScreen(ScreenId.ChessRoom); }
+                GUILayout.EndArea();
+            }
+        }
+
         private IEnumerator SmokeTest()
         {
             var screenshot = Environment.GetEnvironmentVariable("MASHUP_UNITY_SCREENSHOT");
             var screens = new[]
             {
-                ScreenId.Home, ScreenId.Customization, ScreenId.Hub, ScreenId.ChessPreview
+                ScreenId.Home, ScreenId.Customization, ScreenId.Hub, ScreenId.ChessRoom
             };
             foreach (var targetScreen in screens)
             {
@@ -511,10 +794,33 @@ namespace MashupArena
                     CaptureCamera(destination);
                 }
             }
+            AssertChessRayTarget(12, 0.42f);
+            AssertChessRayTarget(28, -0.12f);
+            HandleChessClick(12); // e2
+            if (selectedChessSquare != 12)
+                throw new InvalidOperationException("Smoke test could not select the white pawn.");
+            HandleChessClick(28); // e4
+            if (!chess.Board[28].HasValue || chess.Board[28].Value.Kind != ChessKind.Pawn ||
+                chess.Turn != ChessSide.Black)
+                throw new InvalidOperationException("Smoke test could not play e2-e4.");
+            yield return new WaitForSeconds(0.8f);
+            if (chess.Result == ChessResult.None && chess.Turn != ChessSide.White)
+                throw new InvalidOperationException("Smoke test bot did not answer.");
             var marker = Environment.GetEnvironmentVariable("MASHUP_UNITY_SMOKE_MARKER");
             if (!string.IsNullOrEmpty(marker))
-                File.WriteAllText(marker, "{\"renderer\":true,\"screens\":4}");
+                File.WriteAllText(marker, "{\"renderer\":true,\"screens\":4,\"chessMove\":true,\"botMove\":true}");
             Application.Quit();
+        }
+
+        private void AssertChessRayTarget(int square, float height)
+        {
+            var point = ChessWorld(square) + new Vector3(0f, height, 0f);
+            var screenPoint = mainCamera.WorldToScreenPoint(point);
+            var ray = mainCamera.ScreenPointToRay(screenPoint);
+            if (screenPoint.z <= 0f || !Physics.Raycast(ray, out var hit, 100f) ||
+                hit.collider.GetComponentInParent<ChessSquareTarget>()?.square != square)
+                throw new InvalidOperationException("Chess square is not clickable: " +
+                    ChessRules.SquareName(square));
         }
 
         private void CaptureCamera(string destination)

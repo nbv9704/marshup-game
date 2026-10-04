@@ -6,12 +6,14 @@ for editor automation. No Unity Cloud project or hosted backend is required.
 
 ## Current status
 
-The first interactive shell is implemented: 3D Home, local name/color/hat
-customization, a walkable Game Hub and a visual-only Chess room. It is **not**
-a replacement for the playable Electron build yet. Chess moves, bots and LAN
-are not ported. The existing TypeScript rules, tests, and offline-first/LAN
-behavior remain the reference during migration; do not remove them until each
-Unity replacement is playable and validated.
+The first interactive slice is implemented: 3D Home, local name/color/hat
+customization, a walkable Game Hub and Chess against a basic bot. Unity Chess
+now validates moves independently of rendering, including castling, en passant,
+promotion and terminal outcomes. Solo Chess sessions are saved and restored
+locally. It is **not** a replacement for the Electron build yet: LAN,
+two-player testing, other games and a polished first-person room are still
+missing. The existing TypeScript rules, tests and
+offline-first/LAN behavior remain the reference during migration.
 
 ## Target flow
 
@@ -49,7 +51,8 @@ From the Unity Editor, use **Mashup Arena → Build Windows x64**. The output is
 the whole Windows build folder, not the `.exe` alone. The same build can be run
 in batch mode with `-executeMethod MashupArena.Editor.ArenaBuild.BuildWindows64`.
 
-The `--smoke-test` Player argument exercises Home, Customization, Hub and Chess
-preview, then exits. When `MASHUP_UNITY_SMOKE_MARKER` and
+The `--smoke-test` Player argument exercises Home, Customization, Hub, a legal
+Chess move and the bot's reply, then exits. When `MASHUP_UNITY_SMOKE_MARKER` and
 `MASHUP_UNITY_SCREENSHOT` are set, it writes a JSON readiness marker and four
-camera-rendered screenshots. This is a boot/render check, not a gameplay test.
+camera-rendered screenshots. `Mashup Arena/Test Chess Rules` in the Editor
+checks the main rules against the TypeScript fixture cases.
