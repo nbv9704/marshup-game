@@ -1,5 +1,10 @@
 # MASHUP ARENA — Chess 3D / LAN beta
 
+> Unity migration is underway in [UnityProject](UnityProject/README.md). The
+> Unity build currently contains a 3D Home, customization, walkable hub and
+> visual Chess preview; this Electron beta remains the playable reference
+> until Chess rules, bots and LAN have been ported and verified.
+
 Windows 10/11 x64 offline-first arcade built with TypeScript, React, PixiJS, Three.js, Vite and Electron. Seven 2D games remain playable. Chess additionally has a procedural first-person 3D room with Focus Board, a solo bot, local resume, and optional host-authoritative LAN beta. This is **not** a final release: two-machine/Radmin testing, rematch, timers and further polish are still required.
 
 ## Playable now
